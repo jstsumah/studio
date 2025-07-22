@@ -201,9 +201,7 @@ export function EmployeeTableClient({
       "Procurement",
       "IT",
       "Camp Manager",
-      "Store Manager",
       "Chef",
-      "Head chef",
     ];
     return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
   }, [employees]);
