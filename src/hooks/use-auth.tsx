@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -19,20 +19,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<{ email: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    setIsLoading(true);
     try {
       const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (storedAuth) {
-        setUser(JSON.parse(storedAuth));
+      const parsedAuth = storedAuth ? JSON.parse(storedAuth) : null;
+      setUser(parsedAuth);
+
+      const isAuthPage = pathname === '/login' || pathname === '/signup';
+      
+      if (!parsedAuth && !isAuthPage) {
+        router.push('/login');
+      } else if (parsedAuth && isAuthPage) {
+        router.push('/');
       }
+
     } catch (error) {
-      console.error("Failed to parse auth from localStorage", error);
-      // If parsing fails, ensure we're logged out
+      console.error("Failed to process auth state", error);
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      setUser(null);
+      if (pathname !== '/login') {
+          router.push('/login');
+      }
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, router]);
 
   const login = (email: string) => {
     const userData = { email };

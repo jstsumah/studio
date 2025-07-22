@@ -36,9 +36,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If the user is not authenticated and not on an auth page, the useAuth hook will redirect.
+  // We can show a loading message here as a fallback.
   if (!isAuthenticated && !isAuthPage) {
-    // This will be handled by the redirect in the useAuth hook,
-    // but as a fallback, we can show a loading or redirecting message.
      return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-lg">Redirecting to login...</div>
@@ -46,10 +46,19 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If the user IS authenticated but tries to go to login/signup, redirect them to the home page.
+  // The main redirect logic is in the useAuth hook, but this prevents flashing the auth pages.
+  if (isAuthenticated && isAuthPage) {
+      return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Redirecting to dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <>
-      {isAuthenticated ? <AppShell>{children}</AppShell> : children}
+      {isAuthenticated && !isAuthPage ? <AppShell>{children}</AppShell> : children}
       <Toaster />
     </>
   )
