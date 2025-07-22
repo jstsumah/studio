@@ -1,12 +1,24 @@
 import type { Metadata } from 'next';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import { AppShell } from '@/components/app-shell';
 import { Toaster } from '@/components/ui/toaster';
+import { cn } from '@/lib/utils';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'AssetWise',
   description: 'Asset Tracking System for a Company',
 };
+
+const fontInter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const fontSpaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+});
 
 export default function RootLayout({
   children,
@@ -15,15 +27,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-body antialiased" suppressHydrationWarning>
+      <body
+        className={cn(
+          'font-body antialiased',
+          fontInter.variable,
+          fontSpaceGrotesk.variable
+        )}
+      >
         <AppShell>{children}</AppShell>
         <Toaster />
       </body>
