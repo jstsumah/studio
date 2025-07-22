@@ -15,6 +15,7 @@ import {
   Wrench,
   XCircle,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -95,6 +96,11 @@ export function DashboardClient({
   recentActivity: RecentActivity[];
   employees: Employee[];
 }) {
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const employeeMap = React.useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
 
@@ -253,7 +259,7 @@ export function DashboardClient({
                             <TableCell className="hidden sm:table-cell">
                                 <Badge variant={activity.action === 'Assigned' ? 'default' : 'secondary'}>{activity.action}</Badge>
                             </TableCell>
-                            <TableCell className="text-right">{new Date(activity.date).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-right">{isClient ? format(new Date(activity.date), 'MM/dd/yyyy') : ''}</TableCell>
                         </TableRow>
                        )
                     })}

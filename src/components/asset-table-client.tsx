@@ -20,6 +20,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -51,7 +52,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Asset, Employee, AssetStatus, AssetCategory } from '@/lib/types';
 import { getEmployeeById } from '@/lib/data';
-import { Circle, Laptop, Smartphone, Tablet, HardDrive, PlusCircle } from 'lucide-react';
+import { Circle, Laptop, Smartphone, Tablet, HardDrive, PlusCircle, Download } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const statusConfig: Record<
@@ -174,7 +175,7 @@ const columns: ColumnDef<Asset>[] = [
    {
     accessorKey: 'purchaseDate',
     header: 'Purchase Date',
-    cell: ({ row }) => new Date(row.getValue('purchaseDate')).toLocaleDateString(),
+    cell: ({ row }) => format(new Date(row.getValue('purchaseDate')), "MM/dd/yyyy"),
   },
   {
     id: 'actions',
