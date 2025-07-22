@@ -33,10 +33,12 @@ import {
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { useToast } from "@/hooks/use-toast"
+import type { Company } from "@/lib/types"
 
 const formSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   category: z.enum(["Laptop", "Desktop", "Phone", "Tablet", "Other"]),
+  companyId: z.string().min(1, "Company is required"),
   brand: z.string().min(1, "Brand is required"),
   model: z.string().min(1, "Model is required"),
   purchaseDate: z.date({
@@ -44,7 +46,7 @@ const formSchema = z.object({
   }),
 })
 
-export function RegisterAssetForm({ onFinished }: { onFinished: () => void }) {
+export function RegisterAssetForm({ onFinished, companies }: { onFinished: () => void, companies: Company[] }) {
   const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -81,6 +83,7 @@ export function RegisterAssetForm({ onFinished }: { onFinished: () => void }) {
             </FormItem>
           )}
         />
+        <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="category"
@@ -105,6 +108,29 @@ export function RegisterAssetForm({ onFinished }: { onFinished: () => void }) {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="companyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Company</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a company" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}

@@ -12,6 +12,7 @@ import {
   HardDrive,
   PlusCircle,
   Download,
+  Building,
 } from 'lucide-react';
 
 import type {
@@ -58,8 +59,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { Asset, Employee, AssetStatus, AssetCategory } from '@/lib/types';
-import { getEmployeeById } from '@/lib/data';
+import type { Asset, Employee, AssetStatus, AssetCategory, Company } from '@/lib/types';
+import { getCompanyById, getEmployeeById } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
@@ -149,6 +150,20 @@ const columns: ColumnDef<Asset>[] = [
         <div className="text-sm text-muted-foreground">{row.original.model}</div>
       </div>
     ),
+  },
+  {
+    accessorKey: 'companyId',
+    header: 'Company',
+    cell: ({ row }) => {
+      const companyId = row.getValue('companyId') as string;
+      const company = getCompanyById(companyId);
+      return (
+        <div className="flex items-center gap-2">
+          <Building className="h-4 w-4 text-muted-foreground" />
+          <span>{company?.name ?? 'Unknown'}</span>
+        </div>
+      );
+    }
   },
   {
     accessorKey: 'status',
@@ -241,9 +256,11 @@ const columns: ColumnDef<Asset>[] = [
 export function AssetTableClient({
   assets,
   employees,
+  companies,
 }: {
   assets: Asset[];
   employees: Employee[];
+  companies: Company[];
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -251,6 +268,7 @@ export function AssetTableClient({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
+  const [globalFilter, setGlobalFilter] = React.useState('');
 
   const table = useReactTable({
     data: assets,
@@ -263,11 +281,25 @@ export function AssetTableClient({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, columnId, filterValue) => {
+        const asset = row.original;
+        const company = getCompanyById(asset.companyId);
+        const searchTerm = filterValue.toLowerCase();
+
+        return (
+          asset.serialNumber.toLowerCase().includes(searchTerm) ||
+          asset.brand.toLowerCase().includes(searchTerm) ||
+          asset.model.toLowerCase().includes(searchTerm) ||
+          (company?.name.toLowerCase().includes(searchTerm) ?? false)
+        );
+    },
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
   });
 
@@ -282,11 +314,9 @@ export function AssetTableClient({
       <CardContent>
         <div className="flex items-center justify-between py-4">
           <Input
-            placeholder="Filter by serial no, brand, model..."
-            value={(table.getColumn('serialNumber')?.getFilterValue() as string) ?? ''}
-            onChange={(event) =>
-              table.getColumn('serialNumber')?.setFilterValue(event.target.value)
-            }
+            placeholder="Filter by serial, brand, model, company..."
+            value={globalFilter}
+            onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
           <div className="flex items-center gap-2">
@@ -308,7 +338,7 @@ export function AssetTableClient({
                     Fill in the details below to add a new asset to the inventory.
                   </DialogDescription>
                 </DialogHeader>
-                <RegisterAssetForm onFinished={() => setIsRegisterOpen(false)} />
+                <RegisterAssetForm onFinished={() => setIsRegisterOpen(false)} companies={companies} />
               </DialogContent>
             </Dialog>
             <DropdownMenu>

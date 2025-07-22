@@ -1,6 +1,11 @@
 export type AssetCategory = 'Laptop' | 'Desktop' | 'Phone' | 'Tablet' | 'Other';
 export type AssetStatus = 'Available' | 'In Use' | 'In Repair' | 'Decommissioned';
 
+export type Company = {
+  id: string;
+  name: string;
+};
+
 export type Asset = {
   id: string;
   serialNumber: string;
@@ -13,10 +18,11 @@ export type Asset = {
   assignedTo?: string; // Employee ID
   photoUrl?: string;
   history: Assignment[];
+  companyId: string;
 };
 
 export type Employee = {
-  id: string;
+  id:string;
   name: string;
   department: string;
   jobTitle: string;

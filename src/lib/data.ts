@@ -1,4 +1,10 @@
-import type { Asset, Employee, RecentActivity } from './types';
+import type { Asset, Company, Employee, RecentActivity } from './types';
+
+const companies: Company[] = [
+  { id: 'C001', name: 'Innovate Corp' },
+  { id: 'C002', name: 'Future Systems' },
+  { id: 'C003', name: 'Quantum Leap Inc' },
+];
 
 const employees: Employee[] = [
   { id: 'E001', name: 'Alice Johnson', department: 'Engineering', jobTitle: 'Software Engineer', email: 'alice@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=E001' },
@@ -20,6 +26,7 @@ const assets: Asset[] = [
     status: 'In Use',
     assignedTo: 'E001',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C001',
     history: [
       { date: '2022-01-20', assignedTo: 'Alice Johnson', status: 'In Use', notes: 'New assignment' },
     ],
@@ -35,6 +42,7 @@ const assets: Asset[] = [
     status: 'In Use',
     assignedTo: 'E002',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C002',
     history: [
       { date: '2023-09-25', assignedTo: 'Bob Williams', status: 'In Use', notes: 'New company phone' },
     ],
@@ -49,6 +57,7 @@ const assets: Asset[] = [
     warrantyExpiry: '2024-05-09',
     status: 'Available',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C001',
     history: [
       { date: '2021-05-12', assignedTo: 'Unassigned', status: 'Available', notes: 'Initial registration' },
     ],
@@ -64,6 +73,7 @@ const assets: Asset[] = [
     status: 'In Repair',
     assignedTo: 'E003',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C003',
     history: [
       { date: '2023-11-10', assignedTo: 'Charlie Brown', status: 'In Repair', notes: 'Screen cracked' },
       { date: '2023-03-05', assignedTo: 'Charlie Brown', status: 'In Use', notes: 'Assigned for sales demos' },
@@ -80,6 +90,7 @@ const assets: Asset[] = [
     status: 'In Use',
     assignedTo: 'E004',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C001',
     history: [{ date: '2023-06-15', assignedTo: 'Diana Miller', status: 'In Use' }],
   },
   {
@@ -92,6 +103,7 @@ const assets: Asset[] = [
     warrantyExpiry: '2023-02-19',
     status: 'Decommissioned',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C002',
     history: [
         { date: '2023-03-01', assignedTo: 'N/A', status: 'Decommissioned', notes: 'End of life' },
         { date: '2020-02-22', assignedTo: 'Ethan Davis', status: 'In Use' },
@@ -107,6 +119,7 @@ const assets: Asset[] = [
     warrantyExpiry: '2025-01-14',
     status: 'Available',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C001',
     history: [{ date: '2023-01-15', assignedTo: 'Unassigned', status: 'Available' }],
   },
    {
@@ -120,6 +133,7 @@ const assets: Asset[] = [
     status: 'In Use',
     assignedTo: 'E005',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C003',
     history: [{ date: '2023-10-20', assignedTo: 'Ethan Davis', status: 'In Use' }],
   },
   {
@@ -132,6 +146,7 @@ const assets: Asset[] = [
     warrantyExpiry: '2026-07-31',
     status: 'Available',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C002',
     history: [{ date: '2023-08-01', assignedTo: 'Unassigned', status: 'Available' }],
   },
   {
@@ -144,6 +159,7 @@ const assets: Asset[] = [
     warrantyExpiry: '2026-10-31',
     status: 'Available',
     photoUrl: 'https://placehold.co/600x400',
+    companyId: 'C001',
     history: [{ date: '2023-11-01', assignedTo: 'Unassigned', status: 'Available' }],
   },
 ];
@@ -157,6 +173,8 @@ const recentActivity: RecentActivity[] = [
 ];
 
 export const getAssets = (): Asset[] => assets;
+export const getCompanies = (): Company[] => companies;
+export const getCompanyById = (id: string): Company | undefined => companies.find(c => c.id === id);
 export const getEmployees = (): Employee[] => employees;
 export const getRecentActivity = (): RecentActivity[] => recentActivity;
 
