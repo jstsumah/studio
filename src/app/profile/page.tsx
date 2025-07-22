@@ -13,24 +13,30 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProfileForm } from '@/components/profile-form';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     async function loadData() {
+      setIsLoading(true);
       const [assetsData, employeesData] = await Promise.all([
         getAssets(),
         getEmployees(),
       ]);
       setAllAssets(assetsData);
       setAllEmployees(employeesData);
+      setIsLoading(false);
     }
-    loadData();
-  }, []);
+    if (user) {
+        loadData();
+    }
+  }, [user]);
 
   // Memoize assets to prevent re-filtering on every render
   const assignedAssets = React.useMemo(() => {
@@ -38,25 +44,26 @@ export default function ProfilePage() {
     return allAssets.filter(asset => asset.assignedTo === user.id);
   }, [user, allAssets]);
 
-  if (!user) {
+  const departments = React.useMemo(() => {
+    const existingDepartments = allEmployees.map((e) => e.department).filter(Boolean) as string[];
+    const additionalDepartments = ["Procurement", "IT", "Camp Manager", "Chef"];
+    return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
+  }, [allEmployees]);
+  
+  if (isLoading || !user) {
     return (
-        <div className="flex h-screen items-center justify-center">
-            <div className="text-lg">Loading profile...</div>
+        <div className="p-8 space-y-4">
+            <Skeleton className="h-8 w-1/4" />
+            <Separator />
+            <div className="grid gap-6 lg:grid-cols-3">
+                <Skeleton className="lg:col-span-1 h-48" />
+                <Skeleton className="lg:col-span-2 h-64" />
+            </div>
         </div>
     )
   }
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
-  
-  const getEmployeeById = (id: string): Employee | undefined => {
-    return allEmployees.find(employee => employee.id === id);
-  }
-
-  const departments = React.useMemo(() => {
-    const existingDepartments = allAssets.map((a) => getEmployeeById(a.assignedTo!)?.department).filter(Boolean) as string[];
-    const additionalDepartments = ["Procurement", "IT", "Camp Manager", "Chef"];
-    return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
-  }, [allAssets, allEmployees]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8">
