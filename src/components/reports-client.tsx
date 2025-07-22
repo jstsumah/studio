@@ -17,9 +17,11 @@ import type { Asset, Company, Employee } from '@/lib/types';
 export function ReportsClient({
   assets,
   employees,
+  companies,
 }: {
   assets: Asset[];
   employees: Employee[];
+  companies: Company[];
 }) {
 
   const getCompanyById = (id: string, companies: Company[]): Company | undefined => companies.find(c => c.id === id);
@@ -41,7 +43,6 @@ export function ReportsClient({
   };
 
   const generateFullInventory = async () => {
-    const companies: Company[] = []; // You need to fetch companies here if they are not passed
     const data = assets.map((asset) => ({
       'Serial Number': asset.serialNumber,
       Category: asset.category,
