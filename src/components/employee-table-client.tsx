@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import * as React from 'react';
+import * as React from "react";
 import {
   ChevronsUpDown,
   ChevronDown,
   MoreHorizontal,
   PlusCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
 import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -21,10 +21,10 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -33,8 +33,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -42,25 +42,34 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import type { Employee } from '@/lib/types';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from "@/components/ui/card";
+import type { Employee } from "@/lib/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { AddEmployeeForm } from "./add-employee-form";
 
 const columns: ColumnDef<Employee>[] = [
   {
-    id: 'select',
+    id: "select",
     header: ({ table }) => (
       <Checkbox
         checked={
           table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
+          (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
@@ -77,8 +86,8 @@ const columns: ColumnDef<Employee>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'name',
-    header: 'Name',
+    accessorKey: "name",
+    header: "Name",
     cell: ({ row }) => {
       const employee = row.original;
       return (
@@ -93,28 +102,28 @@ const columns: ColumnDef<Employee>[] = [
     },
   },
   {
-    accessorKey: 'email',
-    header: 'Email',
+    accessorKey: "email",
+    header: "Email",
   },
   {
-    accessorKey: 'department',
+    accessorKey: "department",
     header: ({ column }) => (
       <Button
         variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Department
         <ChevronsUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => <div>{row.getValue('department')}</div>,
+    cell: ({ row }) => <div>{row.getValue("department")}</div>,
   },
   {
-    accessorKey: 'jobTitle',
-    header: 'Job Title',
+    accessorKey: "jobTitle",
+    header: "Job Title",
   },
   {
-    id: 'actions',
+    id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
       const employee = row.original;
@@ -152,6 +161,7 @@ export function EmployeeTableClient({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
+  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = React.useState(false);
 
   const table = useReactTable({
     data: employees,
@@ -202,10 +212,24 @@ export function EmployeeTableClient({
             className="max-w-sm"
           />
           <div className="flex items-center gap-2">
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Employee
-            </Button>
+            <Dialog open={isAddEmployeeOpen} onOpenChange={setIsAddEmployeeOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Employee
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Employee</DialogTitle>
+                  <DialogDescription>
+                    Fill in the details below to add a new employee.
+                  </DialogDescription>
+                </DialogHeader>
+                <AddEmployeeForm onFinished={() => setIsAddEmployeeOpen(false)} />
+              </DialogContent>
+            </Dialog>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
@@ -259,7 +283,7 @@ export function EmployeeTableClient({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
+                    data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
@@ -286,7 +310,7 @@ export function EmployeeTableClient({
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{' '}
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>
           <div className="space-x-2">
