@@ -61,6 +61,15 @@ import { Badge } from '@/components/ui/badge';
 import type { Asset, Employee, AssetStatus, AssetCategory } from '@/lib/types';
 import { getEmployeeById } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { RegisterAssetForm } from './register-asset-form';
 
 const statusConfig: Record<
   AssetStatus,
@@ -73,11 +82,11 @@ const statusConfig: Record<
 };
 
 const categoryIcons: Record<AssetCategory, React.ReactNode> = {
-    Laptop: <Laptop className="h-4 w-4" />,
-    Desktop: <HardDrive className="h-4 w-4" />,
-    Phone: <Smartphone className="h-4 w-4" />,
-    Tablet: <Tablet className="h-4 w-4" />,
-    Other: <Circle className="h-4 w-4" />,
+  Laptop: <Laptop className="h-4 w-4" />,
+  Desktop: <HardDrive className="h-4 w-4" />,
+  Phone: <Smartphone className="h-4 w-4" />,
+  Tablet: <Tablet className="h-4 w-4" />,
+  Other: <Circle className="h-4 w-4" />,
 };
 
 const columns: ColumnDef<Asset>[] = [
@@ -114,14 +123,14 @@ const columns: ColumnDef<Asset>[] = [
     accessorKey: 'category',
     header: 'Category',
     cell: ({ row }) => {
-        const category = row.getValue('category') as AssetCategory;
-        return (
-            <div className="flex items-center gap-2">
-                {categoryIcons[category]}
-                <span>{category}</span>
-            </div>
-        )
-    }
+      const category = row.getValue('category') as AssetCategory;
+      return (
+        <div className="flex items-center gap-2">
+          {categoryIcons[category]}
+          <span>{category}</span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: 'model',
@@ -179,20 +188,24 @@ const columns: ColumnDef<Asset>[] = [
       );
     },
   },
-   {
+  {
     accessorKey: 'purchaseDate',
     header: 'Purchase Date',
     cell: ({ row }) => {
-        const [formattedDate, setFormattedDate] = React.useState('');
-        const date = row.getValue('purchaseDate');
+      const [formattedDate, setFormattedDate] = React.useState('');
+      const date = row.getValue('purchaseDate');
 
-        React.useEffect(() => {
-            if (typeof date === 'string') {
-                setFormattedDate(format(new Date(date), "MM/dd/yyyy"));
-            }
-        }, [date]);
+      React.useEffect(() => {
+        if (typeof date === 'string') {
+          try {
+            setFormattedDate(format(new Date(date), 'MM/dd/yyyy'));
+          } catch (e) {
+            setFormattedDate('Invalid Date');
+          }
+        }
+      }, [date]);
 
-        return formattedDate;
+      return formattedDate;
     },
   },
   {
@@ -237,6 +250,7 @@ export function AssetTableClient({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
 
   const table = useReactTable({
     data: assets,
@@ -276,14 +290,27 @@ export function AssetTableClient({
             className="max-w-sm"
           />
           <div className="flex items-center gap-2">
-             <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export
             </Button>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Register Asset
-            </Button>
+            <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Register Asset
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Register a New Asset</DialogTitle>
+                  <DialogDescription>
+                    Fill in the details below to add a new asset to the inventory.
+                  </DialogDescription>
+                </DialogHeader>
+                <RegisterAssetForm onFinished={() => setIsRegisterOpen(false)} />
+              </DialogContent>
+            </Dialog>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
