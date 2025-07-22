@@ -2,10 +2,18 @@
 
 import * as React from 'react';
 import {
-  CaretSortIcon,
-  ChevronDownIcon,
-  DotsHorizontalIcon,
-} from '@radix-ui/react-icons';
+  ChevronsUpDown,
+  ChevronDown,
+  MoreHorizontal,
+  Circle,
+  Laptop,
+  Smartphone,
+  Tablet,
+  HardDrive,
+  PlusCircle,
+  Download,
+} from 'lucide-react';
+
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -52,7 +60,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Asset, Employee, AssetStatus, AssetCategory } from '@/lib/types';
 import { getEmployeeById } from '@/lib/data';
-import { Circle, Laptop, Smartphone, Tablet, HardDrive, PlusCircle, Download } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const statusConfig: Record<
@@ -124,7 +131,7 @@ const columns: ColumnDef<Asset>[] = [
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
       >
         Brand / Model
-        <CaretSortIcon className="ml-2 h-4 w-4" />
+        <ChevronsUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
@@ -175,7 +182,13 @@ const columns: ColumnDef<Asset>[] = [
    {
     accessorKey: 'purchaseDate',
     header: 'Purchase Date',
-    cell: ({ row }) => format(new Date(row.getValue('purchaseDate')), "MM/dd/yyyy"),
+    cell: ({ row }) => {
+        const [isClient, setIsClient] = React.useState(false);
+        React.useEffect(() => {
+            setIsClient(true);
+        }, []);
+        return isClient ? format(new Date(row.getValue('purchaseDate')), "MM/dd/yyyy") : '';
+    },
   },
   {
     id: 'actions',
@@ -187,7 +200,7 @@ const columns: ColumnDef<Asset>[] = [
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -269,7 +282,7 @@ export function AssetTableClient({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
-                  Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+                  Columns <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
