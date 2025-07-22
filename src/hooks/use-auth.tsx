@@ -27,7 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const allEmployees = getEmployees();
 
   useEffect(() => {
-    setIsLoading(true);
+    // This effect should only run once on mount to check the initial auth state.
+    // The router and pathname are available within the closure.
     try {
       const storedEmail = localStorage.getItem(AUTH_STORAGE_KEY);
       const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -56,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, router]);
+  }, []);
 
   const login = (email: string) => {
     const loggedInUser = allEmployees.find(e => e.email === email);
