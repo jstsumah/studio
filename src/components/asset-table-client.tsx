@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -61,7 +62,6 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Asset, Employee, AssetStatus, AssetCategory, Company } from '@/lib/types';
-import { getCompanyById, getEmployeeById } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog,
@@ -91,7 +91,20 @@ const categoryIcons: Record<AssetCategory, React.ReactNode> = {
   Other: <Circle className="h-4 w-4" />,
 };
 
-const columns: ColumnDef<Asset>[] = [
+export function AssetTableClient({
+  assets,
+  employees,
+  companies,
+}: {
+  assets: Asset[];
+  employees: Employee[];
+  companies: Company[];
+}) {
+
+  const getCompanyById = (id: string): Company | undefined => companies.find(c => c.id === id);
+  const getEmployeeById = (id: string): Employee | undefined => employees.find(e => e.id === id);
+
+  const columns: ColumnDef<Asset>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -254,15 +267,7 @@ const columns: ColumnDef<Asset>[] = [
   },
 ];
 
-export function AssetTableClient({
-  assets,
-  employees,
-  companies,
-}: {
-  assets: Asset[];
-  employees: Employee[];
-  companies: Company[];
-}) {
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =

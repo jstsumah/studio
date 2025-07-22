@@ -1,7 +1,50 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from './firebase';
+
+let companies: Company[] = [];
+let employees: Employee[] = [];
+let assets: Asset[] = [];
+
+async function fetchCompanies() {
+  if (companies.length) return companies;
+  try {
+    const companiesCollection = collection(db, 'companies');
+    const companySnapshot = await getDocs(companiesCollection);
+    companies = companySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
+    return companies;
+  } catch (error) {
+    console.error("Error fetching companies: ", error);
+    return [];
+  }
+}
+
+async function fetchEmployees() {
+  if (employees.length) return employees;
+  try {
+    const employeesCollection = collection(db, 'employees');
+    const employeeSnapshot = await getDocs(employeesCollection);
+    employees = employeeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+    return employees;
+  } catch (error) {
+    console.error("Error fetching employees: ", error);
+    return [];
+  }
+}
+
+async function fetchAssets() {
+    if (assets.length) return assets;
+    try {
+        const assetsCollection = collection(db, 'assets');
+        const assetSnapshot = await getDocs(assetsCollection);
+        assets = assetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
+        return assets;
+    } catch (error) {
+        console.error("Error fetching assets: ", error);
+        return [];
+    }
+}
 
 
 // This mock data will be phased out as we connect to Firestore.
@@ -177,22 +220,13 @@ const MOCK_RECENT_ACTIVITY: RecentActivity[] = [
     { assetId: 'A005', assetSerial: 'SN-LAP-002', employeeId: 'E004', employeeName: 'Diana Miller', date: '2023-06-15', action: 'Assigned' },
 ];
 
-export const getAssets = (): Asset[] => MOCK_ASSETS;
+export const getAssets = async (): Promise<Asset[]> => fetchAssets();
 
-export const getCompanies = async (): Promise<Company[]> => {
-  try {
-    const companiesCollection = collection(db, 'companies');
-    const companySnapshot = await getDocs(companiesCollection);
-    const companyList = companySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
-    return companyList;
-  } catch (error) {
-    console.error("Error fetching companies: ", error);
-    return [];
-  }
-};
-export const getCompanyById = (id: string): Company | undefined => MOCK_COMPANIES.find(c => c.id === id);
-export const getEmployees = (): Employee[] => MOCK_EMPLOYEES;
+export const getCompanies = async (): Promise<Company[]> => fetchCompanies();
+export const getCompanyById = (id: string): Company | undefined => companies.find(c => c.id === id);
+
+export const getEmployees = async (): Promise<Employee[]> => fetchEmployees();
 export const getRecentActivity = (): RecentActivity[] => MOCK_RECENT_ACTIVITY;
 
-export const getEmployeeById = (id: string): Employee | undefined => MOCK_EMPLOYEES.find(e => e.id === id);
-export const getAssetById = (id: string): Asset | undefined => MOCK_ASSETS.find(a => a.id === id);
+export const getEmployeeById = (id: string): Employee | undefined => employees.find(e => e.id === id);
+export const getAssetById = (id: string): Asset | undefined => assets.find(a => a.id === id);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -11,8 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Download, FileText, ListChecks, UserCheck } from 'lucide-react';
 import Papa from 'papaparse';
-import type { Asset, Employee } from '@/lib/types';
-import { getCompanyById, getEmployeeById } from '@/lib/data';
+import type { Asset, Company, Employee } from '@/lib/types';
 
 export function ReportsClient({
   assets,
@@ -21,6 +21,10 @@ export function ReportsClient({
   assets: Asset[];
   employees: Employee[];
 }) {
+
+  const getCompanyById = (id: string, companies: Company[]): Company | undefined => companies.find(c => c.id === id);
+  const getEmployeeById = (id: string, employees: Employee[]): Employee | undefined => employees.find(e => e.id === id);
+
   const downloadCsv = (data: any[], filename: string) => {
     const csv = Papa.unparse(data);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -36,16 +40,17 @@ export function ReportsClient({
     }
   };
 
-  const generateFullInventory = () => {
+  const generateFullInventory = async () => {
+    const companies: Company[] = []; // You need to fetch companies here if they are not passed
     const data = assets.map((asset) => ({
       'Serial Number': asset.serialNumber,
       Category: asset.category,
       Brand: asset.brand,
       Model: asset.model,
-      Company: getCompanyById(asset.companyId)?.name ?? 'N/A',
+      Company: getCompanyById(asset.companyId, companies)?.name ?? 'N/A',
       Status: asset.status,
       'Assigned To': asset.assignedTo
-        ? getEmployeeById(asset.assignedTo)?.name
+        ? getEmployeeById(asset.assignedTo, employees)?.name
         : 'Unassigned',
       'Purchase Date': asset.purchaseDate,
       'Warranty Expiry': asset.warrantyExpiry,

@@ -16,9 +16,21 @@ import { ProfileForm } from '@/components/profile-form';
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const allAssets: Asset[] = getAssets();
+  const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const allEmployees = getEmployees();
+  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
+
+  React.useEffect(() => {
+    async function loadData() {
+      const [assetsData, employeesData] = await Promise.all([
+        getAssets(),
+        getEmployees(),
+      ]);
+      setAllAssets(assetsData);
+      setAllEmployees(employeesData);
+    }
+    loadData();
+  }, []);
 
   // Memoize assets to prevent re-filtering on every render
   const assignedAssets = React.useMemo(() => {
@@ -41,10 +53,10 @@ export default function ProfilePage() {
   }
 
   const departments = React.useMemo(() => {
-    const existingDepartments = getAssets().map((a) => getEmployeeById(a.assignedTo!)?.department).filter(Boolean) as string[];
+    const existingDepartments = allAssets.map((a) => getEmployeeById(a.assignedTo!)?.department).filter(Boolean) as string[];
     const additionalDepartments = ["Procurement", "IT", "Camp Manager", "Chef"];
     return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
-  }, [allEmployees]);
+  }, [allAssets, allEmployees]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8">

@@ -4,8 +4,8 @@ import { AssetTableClient } from '@/components/asset-table-client';
 import type { Asset, Company, Employee } from '@/lib/types';
 
 export default async function AssetsPage() {
-  const assets: Asset[] = getAssets();
-  const employees: Employee[] = getEmployees();
+  const assets: Asset[] = await getAssets();
+  const employees: Employee[] = await getEmployees();
   const companies: Company[] = await getCompanies();
   
   return (
