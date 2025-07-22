@@ -60,95 +60,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { AddEmployeeForm } from "./add-employee-form";
-
-const columns: ColumnDef<Employee>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const employee = row.original;
-      return (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={employee.avatarUrl} alt={employee.name} />
-            <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <span className="font-medium">{employee.name}</span>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "department",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Department
-        <ChevronsUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("department")}</div>,
-  },
-  {
-    accessorKey: "jobTitle",
-    header: "Job Title",
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const employee = row.original;
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(employee.id)}>
-              Copy Employee ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit Employee</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete Employee</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+import { EmployeeForm } from "./employee-form";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export function EmployeeTableClient({
   employees,
@@ -161,7 +75,131 @@ export function EmployeeTableClient({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
-  const [isAddEmployeeOpen, setIsAddEmployeeOpen] = React.useState(false);
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | undefined>(undefined);
+  const { toast } = useToast();
+
+  const openForm = (employee?: Employee) => {
+    setSelectedEmployee(employee);
+    setIsFormOpen(true);
+  }
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setSelectedEmployee(undefined);
+  }
+
+  const openAlert = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsAlertOpen(true);
+  }
+
+  const closeAlert = () => {
+    setIsAlertOpen(false);
+    setSelectedEmployee(undefined);
+  }
+
+  const handleDelete = () => {
+    if (selectedEmployee) {
+      // In a real app, you would make an API call here.
+      console.log("Deleting employee:", selectedEmployee.id);
+      toast({
+        title: "Employee Deleted",
+        description: `Successfully deleted ${selectedEmployee.name}.`,
+        variant: "destructive"
+      });
+      closeAlert();
+    }
+  }
+
+  const columns: ColumnDef<Employee>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => {
+        const employee = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+              <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{employee.name}</span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+    },
+    {
+      accessorKey: "department",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Department
+          <ChevronsUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => <div>{row.getValue("department")}</div>,
+    },
+    {
+      accessorKey: "jobTitle",
+      header: "Job Title",
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const employee = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(employee.id)}>
+                Copy Employee ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => openAlert(employee)}>Delete Employee</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
 
   const table = useReactTable({
     data: employees,
@@ -224,24 +262,10 @@ export function EmployeeTableClient({
             className="max-w-sm"
           />
           <div className="flex items-center gap-2">
-            <Dialog open={isAddEmployeeOpen} onOpenChange={setIsAddEmployeeOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Employee
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Employee</DialogTitle>
-                  <DialogDescription>
-                    Fill in the details below to add a new employee.
-                  </DialogDescription>
-                </DialogHeader>
-                <AddEmployeeForm onFinished={() => setIsAddEmployeeOpen(false)} departments={departments} />
-              </DialogContent>
-            </Dialog>
-
+            <Button onClick={() => openForm()}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Employee
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
@@ -345,6 +369,35 @@ export function EmployeeTableClient({
           </div>
         </div>
       </CardContent>
+       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent onInteractOutside={(e) => {
+            if (!e.defaultPrevented) {
+                closeForm();
+            }
+        }}>
+            <DialogHeader>
+            <DialogTitle>{selectedEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
+            <DialogDescription>
+                Fill in the details below to {selectedEmployee ? 'update the' : 'add a new'} employee.
+            </DialogDescription>
+            </DialogHeader>
+            <EmployeeForm onFinished={closeForm} departments={departments} employee={selectedEmployee} />
+        </DialogContent>
+       </Dialog>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the employee record for {selectedEmployee?.name}.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel onClick={closeAlert}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </Card>
   );
 }
