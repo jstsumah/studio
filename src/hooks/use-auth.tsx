@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // This effect handles routing after the initial loading is complete.
     if (!isLoading) {
       const isAuthPage = pathname === '/login' || pathname === '/signup';
-      if (firebaseUser) {
+      if (user) { // Check for the app user, not just firebaseUser
         if (isAuthPage) {
           router.push('/');
         }
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     }
-  }, [firebaseUser, pathname, isLoading, router]);
+  }, [user, pathname, isLoading, router]);
 
 
   const login = async (email: string, pass: string) => {
@@ -108,7 +108,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     await signOut(auth);
-    // onAuthStateChanged will handle the rest
+    setUser(null);
+    setFirebaseUser(null);
+    router.push('/login');
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
@@ -130,7 +132,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = {
-    isAuthenticated: !!firebaseUser && !!user,
+    isAuthenticated: !!user,
     user,
     firebaseUser,
     login,
