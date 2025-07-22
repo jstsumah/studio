@@ -31,41 +31,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
-      // If user logs out, we know immediately and can stop loading.
-      if (!fbUser) {
+      if (fbUser) {
+        // User is logged in, fetch their document
+        const userDocRef = doc(db, 'employees', fbUser.uid);
+        try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+          } else {
+             // This can happen if a user is created in auth but not in firestore,
+             // or during the signup race condition.
+             // We give the signup function a chance to set the user state manually.
+             // If after a short delay there's still no user, we sign out.
+             setTimeout(async () => {
+                if (!auth.currentUser) return; // if already signed out
+                const stillNoDoc = !(await getDoc(userDocRef)).exists()
+                if(stillNoDoc && window.location.pathname !== '/signup') {
+                    console.error("User document not found, signing out.");
+                    await signOut(auth);
+                }
+             }, 2000)
+          }
+        } catch (error) {
+          console.error("Failed to fetch user document:", error);
+          await signOut(auth);
+        }
+      } else {
+        // User is logged out
         setUser(null);
-        setIsLoading(false);
       }
+      setIsLoading(false);
     });
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    const fetchUserDoc = async (fbUser: FirebaseUser) => {
-      const userDocRef = doc(db, 'employees', fbUser.uid);
-      try {
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
-        } else {
-          console.error("User document not found, signing out.");
-          await signOut(auth); // This will trigger the onAuthStateChanged listener
-        }
-      } catch (error) {
-        console.error("Failed to fetch user document:", error);
-        await signOut(auth);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (firebaseUser) {
-      fetchUserDoc(firebaseUser);
-    }
-    // If firebaseUser is null, the onAuthStateChanged listener has already set isLoading to false.
-  }, [firebaseUser]);
 
 
   useEffect(() => {
@@ -92,16 +92,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
-      const newEmployee: Omit<Employee, 'id'> = {
+      const newEmployeeData: Omit<Employee, 'id'> = {
         name,
         email,
         department: 'Unassigned',
         jobTitle: 'New Employee',
         avatarUrl: '', // Start with an empty avatar URL
       }
-
-      await setDoc(doc(db, 'employees', newUser.uid), newEmployee);
-      // onAuthStateChanged will set the user state and trigger data fetch
+      
+      // Create the user document in Firestore
+      await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
+      
+      // Manually set the user state to prevent the race condition
+      setUser({ id: newUser.uid, ...newEmployeeData });
+      
+      // The onAuthStateChanged listener will still run, but the user state will already be set.
   }
 
   const logout = async () => {
