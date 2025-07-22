@@ -3,8 +3,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { Employee } from '@/lib/types';
 import { useToast } from './use-toast';
@@ -31,45 +31,70 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      const isAuthPage = pathname === '/login' || pathname === '/signup';
-      if (fbUser) {
-        setFirebaseUser(fbUser);
-        const userDocRef = doc(db, 'employees', fbUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
-        } else {
-           // This case can happen if user is created in Firebase console but not in Firestore
-           setUser(null);
-        }
-        if(isAuthPage) router.push('/');
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+      setFirebaseUser(fbUser);
+      setIsLoading(false); 
+    });
+    return () => unsubscribe();
+  }, []);
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (firebaseUser) {
+        setIsLoading(true);
+        const userDocRef = doc(db, 'employees', firebaseUser.uid);
+        try {
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+            } else {
+                // This case can happen if user is created in Firebase auth but not Firestore
+                setUser(null); 
+                // Consider logging out the user here if this is an invalid state
+                await signOut(auth);
+            }
+        } catch (error) {
+            console.error("Failed to fetch user document:", error);
+            setUser(null);
+            // Optionally sign out if user data is critical and fetch fails
+            await signOut(auth);
+        }
+        setIsLoading(false);
       } else {
-        setFirebaseUser(null);
         setUser(null);
+      }
+    };
+
+    fetchUserData();
+  }, [firebaseUser]);
+
+  useEffect(() => {
+    // This effect handles routing after the initial loading is complete.
+    if (!isLoading) {
+      const isAuthPage = pathname === '/login' || pathname === '/signup';
+      if (firebaseUser) {
+        if (isAuthPage) {
+          router.push('/');
+        }
+      } else {
         if (!isAuthPage) {
           router.push('/login');
         }
       }
-      setIsLoading(false);
-    });
+    }
+  }, [firebaseUser, pathname, isLoading, router]);
 
-    return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
 
   const login = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
-    router.push('/');
+    // onAuthStateChanged will handle the rest
   };
 
   const signup = async (name: string, email: string, pass: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
-      const newEmployee: Employee = {
-        id: newUser.uid,
+      const newEmployee: Omit<Employee, 'id'> = {
         name,
         email,
         department: 'Unassigned',
@@ -78,14 +103,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       await setDoc(doc(db, 'employees', newUser.uid), newEmployee);
-      setUser(newEmployee);
-      setFirebaseUser(newUser);
-      router.push('/');
+      // onAuthStateChanged will set the user state
   }
 
   const logout = async () => {
     await signOut(auth);
-    router.push('/login');
+    // onAuthStateChanged will handle the rest
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
