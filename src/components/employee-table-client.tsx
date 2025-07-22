@@ -188,7 +188,15 @@ export function EmployeeTableClient({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(employee.id)}>
+              <DropdownMenuItem
+                onClick={() => {
+                  navigator.clipboard.writeText(employee.id);
+                  toast({
+                    title: "Copied!",
+                    description: "Employee ID copied to clipboard.",
+                  });
+                }}
+              >
                 Copy Employee ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
