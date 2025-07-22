@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -24,7 +25,7 @@ const formSchema = z.object({
   jobTitle: z.string().min(1, "Job title is required"),
 })
 
-export function AddEmployeeForm({ onFinished }: { onFinished: () => void }) {
+export function AddEmployeeForm({ onFinished, departments }: { onFinished: () => void, departments: string[] }) {
   const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -81,11 +82,20 @@ export function AddEmployeeForm({ onFinished }: { onFinished: () => void }) {
             name="department"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Department</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g. Engineering" {...field} />
-                </FormControl>
-                <FormMessage />
+                    <FormLabel>Department</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a department" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        {departments.map((department) => (
+                            <SelectItem key={department} value={department}>{department}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
                 </FormItem>
             )}
             />

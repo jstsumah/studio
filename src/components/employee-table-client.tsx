@@ -195,6 +195,11 @@ export function EmployeeTableClient({
     },
   });
 
+  const departments = React.useMemo(() => {
+    return [...new Set(employees.map((e) => e.department))];
+  }, [employees]);
+
+
   return (
     <Card>
       <CardHeader>
@@ -226,7 +231,7 @@ export function EmployeeTableClient({
                     Fill in the details below to add a new employee.
                   </DialogDescription>
                 </DialogHeader>
-                <AddEmployeeForm onFinished={() => setIsAddEmployeeOpen(false)} />
+                <AddEmployeeForm onFinished={() => setIsAddEmployeeOpen(false)} departments={departments} />
               </DialogContent>
             </Dialog>
 
@@ -305,7 +310,7 @@ export function EmployeeTableClient({
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
+            </Body>
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
