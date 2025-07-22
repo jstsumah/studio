@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { getAssets } from '@/lib/data';
+import { getAssets, getEmployees } from '@/lib/data';
 import type { Asset, Employee } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const allAssets: Asset[] = getAssets();
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const allEmployees = getEmployees();
 
   // Memoize assets to prevent re-filtering on every render
   const assignedAssets = React.useMemo(() => {
@@ -34,17 +35,16 @@ export default function ProfilePage() {
   }
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+  
+  const getEmployeeById = (id: string): Employee | undefined => {
+    return allEmployees.find(employee => employee.id === id);
+  }
+
   const departments = React.useMemo(() => {
     const existingDepartments = getAssets().map((a) => getEmployeeById(a.assignedTo!)?.department).filter(Boolean) as string[];
     const additionalDepartments = ["Procurement", "IT", "Camp Manager", "Chef"];
     return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
-  }, []);
-
-  // Helper function to get an employee by ID (should be memoized or moved if context changes)
-  const getEmployeeById = (id: string) => {
-    return getAssets().find(a => a.assignedTo === id) ? { department: 'Engineering' } : undefined;
-  };
-
+  }, [allEmployees]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8">

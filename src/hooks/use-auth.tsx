@@ -11,7 +11,7 @@ interface AuthContextType {
   user: Employee | null;
   login: (email: string) => void;
   logout: () => void;
-  updateUser: (data: Partial<Employee>) => void;
+  updateUser: (data: Partial<Omit<Employee, 'id' | 'email' | 'avatarUrl'>>) => void;
   isLoading: boolean;
 }
 
@@ -68,12 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // In a real app, you would show an error message.
         // For this demo, we'll log them in with just the email.
         const mockUser: Employee = {
-            id: 'temp-id',
+            id: `temp-${Date.now()}`,
             name: email.split('@')[0],
             email,
             department: 'Unknown',
             jobTitle: 'Unknown',
-            avatarUrl: ''
+            avatarUrl: `https://i.pravatar.cc/150?u=${email}`
         };
         localStorage.setItem(AUTH_STORAGE_KEY, email);
         setUser(mockUser);
@@ -87,15 +87,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const updateUser = (data: Partial<Employee>) => {
+  const updateUser = (data: Partial<Omit<Employee, 'id' | 'email' | 'avatarUrl'>>) => {
     if (user) {
-        // In a real app, you'd send this to an API.
-        // For this demo, we just update the user state.
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
 
-        // Optional: you could update the mock data source here if you want
-        // changes to persist across reloads (but that gets more complex).
         const employeeIndex = allEmployees.findIndex(e => e.id === user.id);
         if(employeeIndex !== -1) {
             allEmployees[employeeIndex] = updatedUser;
