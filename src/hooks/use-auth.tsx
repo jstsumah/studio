@@ -44,16 +44,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
              // This can happen if a user is created in auth but not in firestore,
              // especially during the signup race condition.
              // The signup function now handles setting the user state manually.
-             // If we reach here and the user doc doesn't exist, it's a genuine issue.
-             // We will check again shortly, and if it's still not there, we sign out.
-             setTimeout(async () => {
-                if (!auth.currentUser || auth.currentUser.uid !== fbUser.uid) return; // if already signed out or a different user
-                const stillNoDoc = !(await getDoc(userDocRef)).exists()
-                if(stillNoDoc && window.location.pathname !== '/signup') {
-                    console.error("User document not found, signing out.");
-                    await signOut(auth);
-                }
-             }, 2000)
+             // If we reach here, it implies a login attempt for a user without a DB record, 
+             // which is an inconsistent state.
+             if (pathname !== '/signup') {
+                console.error("User document not found for an existing auth user. Signing out.");
+                await signOut(auth);
+             }
           }
         } catch (error) {
           console.error("Failed to fetch user document:", error);
@@ -66,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [pathname]);
 
 
   useEffect(() => {
