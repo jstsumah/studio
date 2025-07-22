@@ -35,28 +35,27 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // After loading, if on an auth page, show it.
+  // If we are on an auth page, render it. The useAuth hook will redirect if the user is already logged in.
   if (isAuthPage) {
     return <>{children}</>;
   }
-
-  // After loading, if not on auth page and no user, the hook will redirect.
-  // Show a "Redirecting" message as a fallback.
-  if (!user) {
+  
+  // If we have a user and are not on an auth page, show the app shell.
+  if (user) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Redirecting to login...</div>
-      </div>
+        <>
+        <AppShell>{children}</AppShell>
+        <Toaster />
+        </>
     );
   }
 
-  // If we have a user and are not on an auth page, show the app shell.
+  // If no user and not on an auth page, the useAuth hook will redirect. Show a fallback message.
   return (
-    <>
-      <AppShell>{children}</AppShell>
-      <Toaster />
-    </>
-  )
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-lg">Redirecting to login...</div>
+    </div>
+  );
 }
 
 

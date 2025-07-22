@@ -31,49 +31,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
       setFirebaseUser(fbUser);
-      if (fbUser) {
-        // User is logged in, fetch their data
-        const userDocRef = doc(db, 'employees', fbUser.uid);
-        try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
-          } else {
-            // Firestore doc doesn't exist, this is an inconsistent state
-            console.error("User document not found for authenticated user.");
-            await signOut(auth); // Sign out the user
-            setUser(null);
-          }
-        } catch (error) {
-          console.error("Failed to fetch user document:", error);
-          await signOut(auth);
-          setUser(null);
-        }
-      } else {
-        // User is logged out
+      // If user logs out, we know immediately and can stop loading.
+      if (!fbUser) {
         setUser(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (isLoading) {
-      return; // Don't do anything while loading
+    const fetchUserDoc = async (fbUser: FirebaseUser) => {
+      const userDocRef = doc(db, 'employees', fbUser.uid);
+      try {
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+        } else {
+          console.error("User document not found, signing out.");
+          await signOut(auth); // This will trigger the onAuthStateChanged listener
+        }
+      } catch (error) {
+        console.error("Failed to fetch user document:", error);
+        await signOut(auth);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (firebaseUser) {
+      fetchUserDoc(firebaseUser);
     }
+    // If firebaseUser is null, the onAuthStateChanged listener has already set isLoading to false.
+  }, [firebaseUser]);
+
+
+  useEffect(() => {
+    if (isLoading) return;
 
     const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-    // If we have a user and they are on an auth page, redirect to home
     if (user && isAuthPage) {
       router.push('/');
     }
-
-    // If we don't have a user and they are not on an auth page, redirect to login
+    
     if (!user && !isAuthPage) {
       router.push('/login');
     }
