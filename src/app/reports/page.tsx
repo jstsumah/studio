@@ -18,15 +18,20 @@ export default function ReportsPage() {
   React.useEffect(() => {
     async function loadData() {
         setIsLoading(true);
-        const [assetsData, employeesData, companiesData] = await Promise.all([
-            getAssets(),
-            getEmployees(),
-            getCompanies(),
-        ]);
-        setAssets(assetsData);
-        setEmployees(employeesData);
-        setCompanies(companiesData);
-        setIsLoading(false);
+        try {
+          const [assetsData, employeesData, companiesData] = await Promise.all([
+              getAssets(),
+              getEmployees(),
+              getCompanies(),
+          ]);
+          setAssets(assetsData);
+          setEmployees(employeesData);
+          setCompanies(companiesData);
+        } catch (error) {
+          console.error("Failed to load reports data:", error);
+        } finally {
+          setIsLoading(false);
+        }
     }
     loadData();
   }, []);

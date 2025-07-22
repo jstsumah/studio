@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setIsLoading(true);
       setFirebaseUser(fbUser);
       if (fbUser) {
         // User is logged in, fetch their document
@@ -107,8 +108,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const logout = async () => {
+    setIsLoading(true);
     await signOut(auth);
-    // onAuthStateChanged will clear user state and trigger redirects
+    setUser(null);
+    setFirebaseUser(null);
+    setIsLoading(false);
+    router.push('/login');
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {

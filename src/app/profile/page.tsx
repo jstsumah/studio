@@ -24,18 +24,26 @@ export default function ProfilePage() {
 
   React.useEffect(() => {
     async function loadData() {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      };
+      
       setIsLoading(true);
-      const [assetsData, employeesData] = await Promise.all([
-        getAssets(),
-        getEmployees(),
-      ]);
-      setAllAssets(assetsData);
-      setAllEmployees(employeesData);
-      setIsLoading(false);
+      try {
+        const [assetsData, employeesData] = await Promise.all([
+          getAssets(),
+          getEmployees(),
+        ]);
+        setAllAssets(assetsData);
+        setAllEmployees(employeesData);
+      } catch (error) {
+        console.error("Failed to load profile page data:", error)
+      } finally {
+        setIsLoading(false);
+      }
     }
-    if (user) {
-        loadData();
-    }
+    loadData();
   }, [user]);
 
   // Memoize assets to prevent re-filtering on every render

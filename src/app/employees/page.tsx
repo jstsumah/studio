@@ -15,9 +15,14 @@ export default function EmployeesPage() {
   React.useEffect(() => {
     async function loadData() {
         setIsLoading(true);
-        const employeesData = await getEmployees();
-        setEmployees(employeesData);
-        setIsLoading(false);
+        try {
+          const employeesData = await getEmployees();
+          setEmployees(employeesData);
+        } catch (error) {
+          console.error("Failed to load employees:", error);
+        } finally {
+          setIsLoading(false);
+        }
     }
     loadData();
   }, [])
