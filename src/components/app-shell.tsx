@@ -39,12 +39,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Logo } from './icons/logo';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Dashboard' },
   { href: '/assets', icon: Briefcase, label: 'Assets' },
   { href: '/employees', icon: Users, label: 'Employees' },
   { href: '/reports', icon: Download, label: 'Reports' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 function MainSidebar() {
@@ -87,7 +89,7 @@ function MainSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton href="#" tooltip="Settings">
+            <SidebarMenuButton href="/settings" tooltip="Settings">
               <Settings />
               <span>Settings</span>
             </SidebarMenuButton>
@@ -127,7 +129,9 @@ function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Settings</DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/settings">Settings</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>Logout</DropdownMenuItem>
