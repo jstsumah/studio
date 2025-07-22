@@ -183,11 +183,16 @@ const columns: ColumnDef<Asset>[] = [
     accessorKey: 'purchaseDate',
     header: 'Purchase Date',
     cell: ({ row }) => {
-        const [isClient, setIsClient] = React.useState(false);
+        const [formattedDate, setFormattedDate] = React.useState('');
+        const date = row.getValue('purchaseDate');
+
         React.useEffect(() => {
-            setIsClient(true);
-        }, []);
-        return isClient ? format(new Date(row.getValue('purchaseDate')), "MM/dd/yyyy") : '';
+            if (typeof date === 'string') {
+                setFormattedDate(format(new Date(date), "MM/dd/yyyy"));
+            }
+        }, [date]);
+
+        return formattedDate;
     },
   },
   {

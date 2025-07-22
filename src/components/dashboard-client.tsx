@@ -85,6 +85,14 @@ const chartConfigStatus: ChartConfig = {
   },
 };
 
+function RecentActivityDate({ date }: { date: string }) {
+    const [formattedDate, setFormattedDate] = React.useState('');
+    React.useEffect(() => {
+        setFormattedDate(format(new Date(date), 'MM/dd/yyyy'));
+    }, [date]);
+    return <>{formattedDate}</>;
+}
+
 export function DashboardClient({
   stats,
   chartData,
@@ -96,11 +104,6 @@ export function DashboardClient({
   recentActivity: RecentActivity[];
   employees: Employee[];
 }) {
-  const [isClient, setIsClient] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const employeeMap = React.useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
 
@@ -259,7 +262,7 @@ export function DashboardClient({
                             <TableCell className="hidden sm:table-cell">
                                 <Badge variant={activity.action === 'Assigned' ? 'default' : 'secondary'}>{activity.action}</Badge>
                             </TableCell>
-                            <TableCell className="text-right">{isClient ? format(new Date(activity.date), 'MM/dd/yyyy') : ''}</TableCell>
+                            <TableCell className="text-right"><RecentActivityDate date={activity.date} /></TableCell>
                         </TableRow>
                        )
                     })}
