@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -58,7 +59,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { EmployeeForm } from "./employee-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
@@ -378,11 +378,10 @@ export function EmployeeTableClient({
         </div>
       </CardContent>
        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent onInteractOutside={(e) => {
-            if (!e.defaultPrevented) {
-                closeForm();
-            }
-        }}>
+        <DialogContent 
+            onInteractOutside={(e) => e.preventDefault()}
+            onCloseAutoFocus={closeForm}
+        >
             <DialogHeader>
             <DialogTitle>{selectedEmployee ? 'Edit Employee' : 'Add New Employee'}</DialogTitle>
             <DialogDescription>
