@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
   return (
@@ -8,17 +9,31 @@ export default function SettingsPage() {
           Settings
         </h1>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Application Settings</CardTitle>
-          <CardDescription>
-            Manage your application settings here.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Settings content will go here.</p>
-        </CardContent>
-      </Card>
+      <Separator />
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Application Settings</CardTitle>
+            <CardDescription>
+              Manage your application settings here. This is a placeholder for future settings.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Future settings options will be displayed here. For example, you could manage themes, notifications, or data export formats.</p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader>
+            <CardTitle>Company Profile</CardTitle>
+            <CardDescription>
+              Manage company-specific settings. This is a placeholder.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>Future company settings will go here.</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

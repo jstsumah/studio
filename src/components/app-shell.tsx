@@ -3,14 +3,12 @@
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
 import {
-  AppWindow,
   Briefcase,
-  Download,
   Home,
-  PanelLeft,
-  Search,
+  Download,
   Settings,
   Users,
+  Search,
 } from 'lucide-react';
 
 import {
@@ -21,7 +19,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
   SidebarTrigger,
   SidebarInset,
   useSidebar,
@@ -77,25 +74,15 @@ function MainSidebar() {
                 isActive={pathname === item.href}
                 tooltip={item.label}
               >
-                <a href={item.href}>
+                <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
-                </a>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton href="/settings" tooltip="Settings">
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
