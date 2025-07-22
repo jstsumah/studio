@@ -14,6 +14,7 @@ import {
   Download,
   Building,
 } from 'lucide-react';
+import Papa from 'papaparse';
 
 import type {
   ColumnDef,
@@ -303,6 +304,37 @@ export function AssetTableClient({
     },
   });
 
+  const exportToCsv = () => {
+    const dataToExport = table.getFilteredRowModel().rows.map(row => {
+        const asset = row.original;
+        const company = getCompanyById(asset.companyId);
+        const assignedTo = asset.assignedTo ? getEmployeeById(asset.assignedTo)?.name : 'Unassigned';
+        return {
+            'Serial Number': asset.serialNumber,
+            'Category': asset.category,
+            'Brand': asset.brand,
+            'Model': asset.model,
+            'Company': company?.name,
+            'Status': asset.status,
+            'Assigned To': assignedTo,
+            'Purchase Date': asset.purchaseDate
+        };
+    });
+
+    const csv = Papa.unparse(dataToExport);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'assets.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -320,7 +352,7 @@ export function AssetTableClient({
             className="max-w-sm"
           />
           <div className="flex items-center gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={exportToCsv}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
