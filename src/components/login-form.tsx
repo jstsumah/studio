@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -35,6 +37,7 @@ const formSchema = z.object({
 export function LoginForm() {
   const { login } = useAuth();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,18 +47,18 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd call an API to authenticate the user.
-    // For this demo, we just log the user in if they exist in our mock data.
-    console.log('Login attempt:', values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
     try {
-      login(values.email);
-    } catch (error) {
+      await login(values.email, values.password);
+    } catch (error: any) {
        toast({
         title: 'Login Failed',
-        description: 'Invalid email or password.',
+        description: error.message || 'Invalid email or password.',
         variant: 'destructive'
       })
+    } finally {
+        setIsLoading(false);
     }
   }
 
@@ -81,6 +84,7 @@ export function LoginForm() {
                       type="email"
                       placeholder="name@example.com"
                       {...field}
+                      disabled={isLoading}
                     />
                   </FormControl>
                   <FormMessage />
@@ -94,7 +98,7 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input type="password" placeholder="••••••••" {...field} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -102,7 +106,8 @@ export function LoginForm() {
             />
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <LoaderCircle className="animate-spin" />}
               Sign In
             </Button>
             <div className="text-center text-sm">

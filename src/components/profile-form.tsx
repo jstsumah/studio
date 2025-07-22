@@ -16,7 +16,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import type { Employee } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
@@ -24,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { generateAvatar } from '@/ai/flows/generate-avatar-flow';
 import { LoaderCircle } from 'lucide-react';
 import { Separator } from './ui/separator';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -39,6 +39,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
   const { updateUser } = useAuth();
   const [newAvatarUrl, setNewAvatarUrl] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
@@ -77,7 +78,8 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
     }
   }
 
-  function onSubmit(values: ProfileFormValues) {
+  async function onSubmit(values: ProfileFormValues) {
+    setIsSaving(true);
     const updateData: Partial<Employee> = {
       name: values.name,
       jobTitle: values.jobTitle,
@@ -88,11 +90,8 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
       updateData.avatarUrl = newAvatarUrl;
     }
 
-    updateUser(updateData);
-    toast({
-      title: 'Profile Updated!',
-      description: 'Your information has been successfully updated.',
-    });
+    await updateUser(updateData);
+    setIsSaving(false);
     onFinished();
   }
 
@@ -180,7 +179,10 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
         </div>
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <LoaderCircle className="animate-spin" />}
+              Save Changes
+            </Button>
         </div>
       </form>
     </Form>

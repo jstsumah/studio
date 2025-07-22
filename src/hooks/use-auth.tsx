@@ -3,106 +3,115 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getEmployees } from '@/lib/data';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 import type { Employee } from '@/lib/types';
+import { useToast } from './use-toast';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: Employee | null;
-  login: (email: string) => void;
+  firebaseUser: FirebaseUser | null;
+  login: (email: string, pass: string) => Promise<void>;
+  signup: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id' | 'email'>>) => void;
+  updateUser: (data: Partial<Omit<Employee, 'id'>>) => Promise<void>;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = 'assetwise_auth_email';
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Employee | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  
-  const allEmployees = getEmployees();
+  const { toast } = useToast();
 
   useEffect(() => {
-    try {
-      const storedEmail = localStorage.getItem(AUTH_STORAGE_KEY);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       const isAuthPage = pathname === '/login' || pathname === '/signup';
-      
-      if (storedEmail) {
-        const loggedInUser = allEmployees.find(e => e.email === storedEmail);
-        setUser(loggedInUser || null);
-        if (isAuthPage) {
-            router.push('/');
+      if (fbUser) {
+        setFirebaseUser(fbUser);
+        const userDocRef = doc(db, 'employees', fbUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+        } else {
+           // This case can happen if user is created in Firebase console but not in Firestore
+           setUser(null);
         }
+        if(isAuthPage) router.push('/');
+
       } else {
+        setFirebaseUser(null);
         setUser(null);
         if (!isAuthPage) {
-            router.push('/login');
+          router.push('/login');
         }
       }
+      setIsLoading(false);
+    });
 
-    } catch (error) {
-      console.error("Failed to process auth state", error);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      setUser(null);
-      if (pathname !== '/login' && pathname !== '/signup') {
-          router.push('/login');
-      }
-    } finally {
-        setIsLoading(false);
-    }
+    return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
-  const login = (email: string) => {
-    const loggedInUser = allEmployees.find(e => e.email === email);
-    if(loggedInUser) {
-        localStorage.setItem(AUTH_STORAGE_KEY, email);
-        setUser(loggedInUser);
-        router.push('/');
-    } else {
-        // In a real app, you would show an error message.
-        // For this demo, we'll log them in with just the email.
-        const mockUser: Employee = {
-            id: `temp-${Date.now()}`,
-            name: email.split('@')[0],
-            email,
-            department: 'Unknown',
-            jobTitle: 'Unknown',
-            avatarUrl: `https://i.pravatar.cc/150?u=${email}`
-        };
-        localStorage.setItem(AUTH_STORAGE_KEY, email);
-        setUser(mockUser);
-        router.push('/');
-    }
+  const login = async (email: string, pass: string) => {
+    await signInWithEmailAndPassword(auth, email, pass);
+    router.push('/');
   };
 
-  const logout = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    setUser(null);
+  const signup = async (name: string, email: string, pass: string) => {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const newUser = userCredential.user;
+
+      const newEmployee: Employee = {
+        id: newUser.uid,
+        name,
+        email,
+        department: 'Unassigned',
+        jobTitle: 'New Employee',
+        avatarUrl: `https://i.pravatar.cc/150?u=${newUser.uid}`,
+      }
+
+      await setDoc(doc(db, 'employees', newUser.uid), newEmployee);
+      setUser(newEmployee);
+      setFirebaseUser(newUser);
+      router.push('/');
+  }
+
+  const logout = async () => {
+    await signOut(auth);
     router.push('/login');
   };
 
-  const updateUser = (data: Partial<Omit<Employee, 'id' | 'email'>>) => {
+  const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
     if (user) {
-        const updatedUser = { ...user, ...data };
-        setUser(updatedUser);
-
-        const employeeIndex = allEmployees.findIndex(e => e.id === user.id);
-        if(employeeIndex !== -1) {
-            allEmployees[employeeIndex] = updatedUser;
-        }
+      const userDocRef = doc(db, 'employees', user.id);
+      await updateDoc(userDocRef, data);
+      setUser(prevUser => prevUser ? { ...prevUser, ...data } : null);
+       toast({
+        title: 'Profile Updated!',
+        description: 'Your information has been successfully updated.',
+    });
+    } else {
+         toast({
+            title: 'Error',
+            description: 'You must be logged in to update your profile.',
+            variant: 'destructive',
+        });
     }
   };
 
   const value = {
-    isAuthenticated: !!user,
+    isAuthenticated: !!firebaseUser && !!user,
     user,
+    firebaseUser,
     login,
+    signup,
     logout,
     updateUser,
     isLoading,
