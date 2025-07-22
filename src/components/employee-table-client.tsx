@@ -196,7 +196,16 @@ export function EmployeeTableClient({
   });
 
   const departments = React.useMemo(() => {
-    return [...new Set(employees.map((e) => e.department))];
+    const existingDepartments = employees.map((e) => e.department);
+    const additionalDepartments = [
+      "Procurement",
+      "IT",
+      "Camp Manager",
+      "Store Manager",
+      "Chef",
+      "Head chef",
+    ];
+    return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
   }, [employees]);
 
 
