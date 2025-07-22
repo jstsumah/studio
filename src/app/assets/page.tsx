@@ -1,11 +1,12 @@
+
 import { getAssets, getCompanies, getEmployees } from '@/lib/data';
 import { AssetTableClient } from '@/components/asset-table-client';
 import type { Asset, Company, Employee } from '@/lib/types';
 
-export default function AssetsPage() {
+export default async function AssetsPage() {
   const assets: Asset[] = getAssets();
   const employees: Employee[] = getEmployees();
-  const companies: Company[] = getCompanies();
+  const companies: Company[] = await getCompanies();
   
   return (
      <div className="p-4 md:p-8">

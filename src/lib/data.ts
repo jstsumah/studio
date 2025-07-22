@@ -1,12 +1,17 @@
-import type { Asset, Company, Employee, RecentActivity } from './types';
 
-const companies: Company[] = [
+import type { Asset, Company, Employee, RecentActivity } from './types';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from './firebase';
+
+
+// This mock data will be phased out as we connect to Firestore.
+const MOCK_COMPANIES: Company[] = [
   { id: 'C001', name: 'Innovate Corp' },
   { id: 'C002', name: 'Future Systems' },
   { id: 'C003', name: 'Quantum Leap Inc' },
 ];
 
-const employees: Employee[] = [
+const MOCK_EMPLOYEES: Employee[] = [
   { id: 'E001', name: 'Alice Johnson', department: 'Engineering', jobTitle: 'Software Engineer', email: 'alice@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=E001' },
   { id: 'E002', name: 'Bob Williams', department: 'Marketing', jobTitle: 'Marketing Manager', email: 'bob@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=E002' },
   { id: 'E003', name: 'Charlie Brown', department: 'Sales', jobTitle: 'Sales Representative', email: 'charlie@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=E003' },
@@ -14,7 +19,7 @@ const employees: Employee[] = [
   { id: 'E005', name: 'Ethan Davis', department: 'Human Resources', jobTitle: 'HR Specialist', email: 'ethan@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=E005' },
 ];
 
-const assets: Asset[] = [
+const MOCK_ASSETS: Asset[] = [
   {
     id: 'A001',
     serialNumber: 'SN-LAP-001',
@@ -164,7 +169,7 @@ const assets: Asset[] = [
   },
 ];
 
-const recentActivity: RecentActivity[] = [
+const MOCK_RECENT_ACTIVITY: RecentActivity[] = [
     { assetId: 'A001', assetSerial: 'SN-LAP-001', employeeId: 'E001', employeeName: 'Alice Johnson', date: '2022-01-20', action: 'Assigned' },
     { assetId: 'A002', assetSerial: 'SN-PHN-001', employeeId: 'E002', employeeName: 'Bob Williams', date: '2023-09-25', action: 'Assigned' },
     { assetId: 'A004', assetSerial: 'SN-TAB-001', employeeId: 'E003', employeeName: 'Charlie Brown', date: '2023-03-05', action: 'Assigned' },
@@ -172,11 +177,22 @@ const recentActivity: RecentActivity[] = [
     { assetId: 'A005', assetSerial: 'SN-LAP-002', employeeId: 'E004', employeeName: 'Diana Miller', date: '2023-06-15', action: 'Assigned' },
 ];
 
-export const getAssets = (): Asset[] => assets;
-export const getCompanies = (): Company[] => companies;
-export const getCompanyById = (id: string): Company | undefined => companies.find(c => c.id === id);
-export const getEmployees = (): Employee[] => employees;
-export const getRecentActivity = (): RecentActivity[] => recentActivity;
+export const getAssets = (): Asset[] => MOCK_ASSETS;
 
-export const getEmployeeById = (id: string): Employee | undefined => employees.find(e => e.id === id);
-export const getAssetById = (id: string): Asset | undefined => assets.find(a => a.id === id);
+export const getCompanies = async (): Promise<Company[]> => {
+  try {
+    const companiesCollection = collection(db, 'companies');
+    const companySnapshot = await getDocs(companiesCollection);
+    const companyList = companySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company));
+    return companyList;
+  } catch (error) {
+    console.error("Error fetching companies: ", error);
+    return [];
+  }
+};
+export const getCompanyById = (id: string): Company | undefined => MOCK_COMPANIES.find(c => c.id === id);
+export const getEmployees = (): Employee[] => MOCK_EMPLOYEES;
+export const getRecentActivity = (): RecentActivity[] => MOCK_RECENT_ACTIVITY;
+
+export const getEmployeeById = (id: string): Employee | undefined => MOCK_EMPLOYEES.find(e => e.id === id);
+export const getAssetById = (id: string): Asset | undefined => MOCK_ASSETS.find(a => a.id === id);
