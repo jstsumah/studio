@@ -31,56 +31,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setFirebaseUser(fbUser);
-      setIsLoading(false); 
+      if (fbUser) {
+        // User is logged in, fetch their data
+        const userDocRef = doc(db, 'employees', fbUser.uid);
+        try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+          } else {
+            // Firestore doc doesn't exist, this is an inconsistent state
+            console.error("User document not found for authenticated user.");
+            await signOut(auth); // Sign out the user
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Failed to fetch user document:", error);
+          await signOut(auth);
+          setUser(null);
+        }
+      } else {
+        // User is logged out
+        setUser(null);
+      }
+      setIsLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (firebaseUser) {
-        setIsLoading(true);
-        const userDocRef = doc(db, 'employees', firebaseUser.uid);
-        try {
-            const userDoc = await getDoc(userDocRef);
-            if (userDoc.exists()) {
-                setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
-            } else {
-                // This case can happen if user is created in Firebase auth but not Firestore
-                setUser(null); 
-                // Consider logging out the user here if this is an invalid state
-                await signOut(auth);
-            }
-        } catch (error) {
-            console.error("Failed to fetch user document:", error);
-            setUser(null);
-            // Optionally sign out if user data is critical and fetch fails
-            await signOut(auth);
-        }
-        setIsLoading(false);
-      } else {
-        setUser(null);
-      }
-    };
+    if (isLoading) {
+      return; // Don't do anything while loading
+    }
 
-    fetchUserData();
-  }, [firebaseUser]);
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-  useEffect(() => {
-    // This effect handles routing after the initial loading is complete.
-    if (!isLoading) {
-      const isAuthPage = pathname === '/login' || pathname === '/signup';
-      if (user) { // Check for the app user, not just firebaseUser
-        if (isAuthPage) {
-          router.push('/');
-        }
-      } else {
-        if (!isAuthPage) {
-          router.push('/login');
-        }
-      }
+    // If we have a user and they are on an auth page, redirect to home
+    if (user && isAuthPage) {
+      router.push('/');
+    }
+
+    // If we don't have a user and they are not on an auth page, redirect to login
+    if (!user && !isAuthPage) {
+      router.push('/login');
     }
   }, [user, pathname, isLoading, router]);
 
@@ -90,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // onAuthStateChanged will handle the rest
   };
 
-  const signup = async (name: string, email: string, pass: string) => {
+  const signup = async (name: string, email: string, pass:string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
@@ -103,14 +98,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       await setDoc(doc(db, 'employees', newUser.uid), newEmployee);
-      // onAuthStateChanged will set the user state
+      // onAuthStateChanged will set the user state and trigger data fetch
   }
 
   const logout = async () => {
     await signOut(auth);
-    setUser(null);
-    setFirebaseUser(null);
-    router.push('/login');
+    // onAuthStateChanged will clear user state and trigger redirects
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {

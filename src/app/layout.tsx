@@ -23,9 +23,8 @@ const fontSpaceGrotesk = Space_Grotesk({
 
 
 function AppContent({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const pathname = usePathname();
-
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   if (isLoading) {
@@ -36,29 +35,25 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If the user is not authenticated and not on an auth page, the useAuth hook will redirect.
-  // We can show a loading message here as a fallback.
-  if (!isAuthenticated && !isAuthPage) {
-     return (
+  // After loading, if on an auth page, show it.
+  if (isAuthPage) {
+    return <>{children}</>;
+  }
+
+  // After loading, if not on auth page and no user, the hook will redirect.
+  // Show a "Redirecting" message as a fallback.
+  if (!user) {
+    return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-lg">Redirecting to login...</div>
       </div>
     );
   }
 
-  // If the user IS authenticated but tries to go to login/signup, redirect them to the home page.
-  // The main redirect logic is in the useAuth hook, but this prevents flashing the auth pages.
-  if (isAuthenticated && isAuthPage) {
-      return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Redirecting to dashboard...</div>
-      </div>
-    );
-  }
-
+  // If we have a user and are not on an auth page, show the app shell.
   return (
     <>
-      {isAuthenticated && !isAuthPage ? <AppShell>{children}</AppShell> : children}
+      <AppShell>{children}</AppShell>
       <Toaster />
     </>
   )
