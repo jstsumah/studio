@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         department: 'Unassigned',
         jobTitle: 'New Employee',
-        avatarUrl: `https://i.pravatar.cc/150?u=${newUser.uid}`,
+        avatarUrl: '', // Start with an empty avatar URL
       }
 
       await setDoc(doc(db, 'employees', newUser.uid), newEmployee);
