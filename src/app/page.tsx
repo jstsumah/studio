@@ -1,3 +1,6 @@
+
+'use client';
+
 import { getAssets, getEmployees, getRecentActivity } from '@/lib/data';
 import { DashboardClient } from '@/components/dashboard-client';
 import type { Asset, Employee } from '@/lib/types';

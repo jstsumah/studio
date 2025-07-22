@@ -9,6 +9,7 @@ import {
   Settings,
   Users,
   Search,
+  LogOut,
 } from 'lucide-react';
 
 import {
@@ -37,6 +38,7 @@ import {
 import { Logo } from './icons/logo';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Dashboard' },
@@ -88,6 +90,9 @@ function MainSidebar() {
 }
 
 function Header() {
+  const { logout, user } = useAuth();
+  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
       <SidebarTrigger className="md:hidden" />
@@ -107,8 +112,8 @@ function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src="https://i.pravatar.cc/150?u=admin" alt="Admin" />
-              <AvatarFallback>AD</AvatarFallback>
+              <AvatarImage src={`https://i.pravatar.cc/150?u=${user?.email}`} alt={user?.email ?? 'User'} />
+              <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
             <span className="sr-only">Toggle user menu</span>
           </Button>
@@ -121,7 +126,10 @@ function Header() {
           </DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Logout</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => logout()}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Logout</span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
