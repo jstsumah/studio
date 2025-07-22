@@ -20,11 +20,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import type { Employee } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { generateAvatar } from '@/ai/flows/generate-avatar-flow';
+import { LoaderCircle } from 'lucide-react';
+import { Separator } from './ui/separator';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   jobTitle: z.string().min(1, 'Job title is required'),
   department: z.string().min(1, 'Department is required'),
+  avatarPrompt: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
@@ -32,6 +37,8 @@ type ProfileFormValues = z.infer<typeof formSchema>;
 export function ProfileForm({ user, onFinished, departments }: { user: Employee, onFinished: () => void, departments: string[] }) {
   const { toast } = useToast();
   const { updateUser } = useAuth();
+  const [newAvatarUrl, setNewAvatarUrl] = React.useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = React.useState(false);
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
@@ -39,13 +46,49 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
       name: user.name,
       jobTitle: user.jobTitle,
       department: user.department,
+      avatarPrompt: '',
     },
   });
 
+  async function handleGenerateAvatar() {
+    const prompt = form.getValues('avatarPrompt');
+    if (!prompt) {
+      toast({
+        title: 'Prompt Required',
+        description: 'Please enter a description for your new avatar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const result = await generateAvatar({ prompt });
+      setNewAvatarUrl(result.avatarUrl);
+    } catch (error) {
+      console.error('Avatar generation failed:', error);
+      toast({
+        title: 'Generation Failed',
+        description: 'Could not generate a new avatar. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   function onSubmit(values: ProfileFormValues) {
-    // In a real app, this would be an API call.
-    // Here we're using our updateUser function from the auth context.
-    updateUser(values);
+    const updateData: Partial<Employee> = {
+      name: values.name,
+      jobTitle: values.jobTitle,
+      department: values.department,
+    };
+
+    if (newAvatarUrl) {
+      updateData.avatarUrl = newAvatarUrl;
+    }
+
+    updateUser(updateData);
     toast({
       title: 'Profile Updated!',
       description: 'Your information has been successfully updated.',
@@ -56,6 +99,35 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        
+        <div className="flex flex-col items-center gap-4">
+            <Avatar className="h-24 w-24">
+                <AvatarImage src={newAvatarUrl ?? user.avatarUrl} alt={user.name} />
+                <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+
+            <FormField
+            control={form.control}
+            name="avatarPrompt"
+            render={({ field }) => (
+                <FormItem className="w-full">
+                <FormLabel>Generate New Avatar</FormLabel>
+                <div className="flex gap-2">
+                    <FormControl>
+                        <Input placeholder="e.g., A friendly cartoon robot" {...field} />
+                    </FormControl>
+                    <Button type="button" onClick={handleGenerateAvatar} disabled={isGenerating}>
+                        {isGenerating ? <LoaderCircle className="animate-spin" /> : 'Generate'}
+                    </Button>
+                </div>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
+
+        <Separator />
+        
         <FormField
           control={form.control}
           name="name"

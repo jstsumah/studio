@@ -11,7 +11,7 @@ interface AuthContextType {
   user: Employee | null;
   login: (email: string) => void;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id' | 'email' | 'avatarUrl'>>) => void;
+  updateUser: (data: Partial<Omit<Employee, 'id' | 'email'>>) => void;
   isLoading: boolean;
 }
 
@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const updateUser = (data: Partial<Omit<Employee, 'id' | 'email' | 'avatarUrl'>>) => {
+  const updateUser = (data: Partial<Omit<Employee, 'id' | 'email'>>) => {
     if (user) {
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
