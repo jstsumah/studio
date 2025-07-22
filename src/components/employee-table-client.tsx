@@ -310,7 +310,7 @@ export function EmployeeTableClient({
                   </TableCell>
                 </TableRow>
               )}
-            </Body>
+            </TableBody>
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
