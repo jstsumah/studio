@@ -1,19 +1,29 @@
 
 'use client'
 
+import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { getAssets } from '@/lib/data';
-import type { Asset } from '@/lib/types';
+import type { Asset, Employee } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ProfileForm } from '@/components/profile-form';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const allAssets: Asset[] = getAssets();
-  const assignedAssets = allAssets.filter(asset => asset.assignedTo === user?.id);
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
+
+  // Memoize assets to prevent re-filtering on every render
+  const assignedAssets = React.useMemo(() => {
+    if (!user) return [];
+    return allAssets.filter(asset => asset.assignedTo === user.id);
+  }, [user, allAssets]);
 
   if (!user) {
     return (
@@ -24,6 +34,17 @@ export default function ProfilePage() {
   }
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+  const departments = React.useMemo(() => {
+    const existingDepartments = getAssets().map((a) => getEmployeeById(a.assignedTo!)?.department).filter(Boolean) as string[];
+    const additionalDepartments = ["Procurement", "IT", "Camp Manager", "Chef"];
+    return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
+  }, []);
+
+  // Helper function to get an employee by ID (should be memoized or moved if context changes)
+  const getEmployeeById = (id: string) => {
+    return getAssets().find(a => a.assignedTo === id) ? { department: 'Engineering' } : undefined;
+  };
+
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8">
@@ -31,6 +52,20 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">
           My Profile
         </h1>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+                <Button>Edit Profile</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Your Profile</DialogTitle>
+                    <DialogDescription>
+                        Update your personal information here. Click save when you're done.
+                    </DialogDescription>
+                </DialogHeader>
+                <ProfileForm user={user} onFinished={() => setIsFormOpen(false)} departments={departments} />
+            </DialogContent>
+        </Dialog>
       </div>
       <Separator />
       <div className="grid gap-6 lg:grid-cols-3">

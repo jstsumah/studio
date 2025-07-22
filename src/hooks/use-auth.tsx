@@ -11,6 +11,7 @@ interface AuthContextType {
   user: Employee | null;
   login: (email: string) => void;
   logout: () => void;
+  updateUser: (data: Partial<Employee>) => void;
   isLoading: boolean;
 }
 
@@ -27,8 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const allEmployees = getEmployees();
 
   useEffect(() => {
-    // This effect should only run once on mount to check the initial auth state.
-    // The router and pathname are available within the closure.
     try {
       const storedEmail = localStorage.getItem(AUTH_STORAGE_KEY);
       const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -88,11 +87,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
+  const updateUser = (data: Partial<Employee>) => {
+    if (user) {
+        // In a real app, you'd send this to an API.
+        // For this demo, we just update the user state.
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+
+        // Optional: you could update the mock data source here if you want
+        // changes to persist across reloads (but that gets more complex).
+        const employeeIndex = allEmployees.findIndex(e => e.id === user.id);
+        if(employeeIndex !== -1) {
+            allEmployees[employeeIndex] = updatedUser;
+        }
+    }
+  };
+
   const value = {
     isAuthenticated: !!user,
     user,
     login,
     logout,
+    updateUser,
     isLoading,
   };
 
