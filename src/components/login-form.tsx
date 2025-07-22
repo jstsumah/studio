@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,6 +25,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -32,6 +34,8 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const { login } = useAuth();
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -42,9 +46,17 @@ export function LoginForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // In a real app, you'd call an API to authenticate the user.
-    // For this demo, we'll just simulate a successful login.
+    // For this demo, we just log the user in if they exist in our mock data.
     console.log('Login attempt:', values);
-    login(values.email);
+    try {
+      login(values.email);
+    } catch (error) {
+       toast({
+        title: 'Login Failed',
+        description: 'Invalid email or password.',
+        variant: 'destructive'
+      })
+    }
   }
 
   return (

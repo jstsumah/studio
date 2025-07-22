@@ -11,6 +11,7 @@ import {
   Users,
   Search,
   LogOut,
+  User as UserIcon,
 } from 'lucide-react';
 
 import {
@@ -92,7 +93,7 @@ function MainSidebar() {
 
 function Header() {
   const { logout, user } = useAuth();
-  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
@@ -113,7 +114,7 @@ function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={`https://i.pravatar.cc/150?u=${user?.email}`} alt={user?.email ?? 'User'} />
+              <AvatarImage src={user?.avatarUrl} alt={user?.name ?? 'User'} />
               <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
             <span className="sr-only">Toggle user menu</span>
@@ -122,8 +123,17 @@ function Header() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
+           <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <UserIcon className="mr-2 h-4 w-4" />
+              <span>My Profile</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings">Settings</Link>
+            <Link href="/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />

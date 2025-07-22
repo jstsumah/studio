@@ -1,11 +1,14 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { getEmployees } from '@/lib/data';
+import type { Employee } from '@/lib/types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: { email: string | null } | null;
+  user: Employee | null;
   login: (email: string) => void;
   logout: () => void;
   isLoading: boolean;
@@ -13,34 +16,40 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEY = 'assetwise_auth';
+const AUTH_STORAGE_KEY = 'assetwise_auth_email';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<{ email: string | null } | null>(null);
+  const [user, setUser] = useState<Employee | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  
+  const allEmployees = getEmployees();
 
   useEffect(() => {
     setIsLoading(true);
     try {
-      const storedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-      const parsedAuth = storedAuth ? JSON.parse(storedAuth) : null;
-      setUser(parsedAuth);
-
+      const storedEmail = localStorage.getItem(AUTH_STORAGE_KEY);
       const isAuthPage = pathname === '/login' || pathname === '/signup';
       
-      if (!parsedAuth && !isAuthPage) {
-        router.push('/login');
-      } else if (parsedAuth && isAuthPage) {
-        router.push('/');
+      if (storedEmail) {
+        const loggedInUser = allEmployees.find(e => e.email === storedEmail);
+        setUser(loggedInUser || null);
+        if (isAuthPage) {
+            router.push('/');
+        }
+      } else {
+        setUser(null);
+        if (!isAuthPage) {
+            router.push('/login');
+        }
       }
 
     } catch (error) {
       console.error("Failed to process auth state", error);
       localStorage.removeItem(AUTH_STORAGE_KEY);
       setUser(null);
-      if (pathname !== '/login') {
+      if (pathname !== '/login' && pathname !== '/signup') {
           router.push('/login');
       }
     } finally {
@@ -50,10 +59,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [pathname, router]);
 
   const login = (email: string) => {
-    const userData = { email };
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
-    setUser(userData);
-    router.push('/');
+    const loggedInUser = allEmployees.find(e => e.email === email);
+    if(loggedInUser) {
+        localStorage.setItem(AUTH_STORAGE_KEY, email);
+        setUser(loggedInUser);
+        router.push('/');
+    } else {
+        // In a real app, you would show an error message.
+        // For this demo, we'll log them in with just the email.
+        const mockUser: Employee = {
+            id: 'temp-id',
+            name: email.split('@')[0],
+            email,
+            department: 'Unknown',
+            jobTitle: 'Unknown',
+            avatarUrl: ''
+        };
+        localStorage.setItem(AUTH_STORAGE_KEY, email);
+        setUser(mockUser);
+        router.push('/');
+    }
   };
 
   const logout = () => {
