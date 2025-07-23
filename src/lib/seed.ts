@@ -38,12 +38,22 @@ const employees: Omit<Employee, 'id'>[] = [
     role: 'Employee',
     active: false,
   },
+  {
+    name: 'Admin User',
+    department: 'Administration',
+    jobTitle: 'System Administrator',
+    email: 'digitalmarketing@sunworldsafaris.com',
+    avatarUrl: '',
+    role: 'Admin',
+    active: true,
+  }
 ];
 
 const employeeIdMap: Record<string, string> = {
     'jane.doe@example.com': 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2',
     'john.smith@example.com': 'mB8vY4zP9tX3rW1oI7uE5sA2gC3',
     'sam.jones@example.com': 'aC1bE2dF3gH4iJ5kL6mN7oP8qR9',
+    'digitalmarketing@sunworldsafaris.com': 'd1g1M4rk3tAdm1nS9nW0rldS4f4r1'
 }
 
 
@@ -154,7 +164,8 @@ async function seedDatabase() {
     console.log('\n================ IMPORTANT ================');
     console.log('To log in, you must first create users in Firebase Authentication.');
     console.log('Please go to your Firebase project console and create users with the following emails:');
-    console.log('\n- jane.doe@example.com (This user will be an ADMIN)');
+    console.log('\n- digitalmarketing@sunworldsafaris.com (This user will be an ADMIN)');
+    console.log('- jane.doe@example.com (This user will be an ADMIN)');
     console.log('- john.smith@example.com');
     console.log('- sam.jones@example.com (This user is INACTIVE by default)');
     console.log('\nUse any password you like (e.g., "password").');
