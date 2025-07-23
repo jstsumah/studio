@@ -29,8 +29,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
+    // Wait until the auth state is fully determined before running any redirect logic.
     if (isLoading) {
-      return; // Wait until the auth state is determined.
+      return;
     }
 
     const isAuthPage = pathname === '/login' || pathname === '/signup';
@@ -47,10 +48,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   }, [user, isLoading, pathname, router]);
 
-
-  // While loading auth state, or if the user state doesn't match the page type yet,
-  // show a global loading screen. This is safe from hydration errors because it doesn't
-  // depend on client-side state that changes before hydration.
+  // Always show a loading screen while the auth state is being determined.
+  // This is the key to preventing the login loop and hydration errors.
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -61,7 +60,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-  // If there's a user and we're not on an auth page, show the app shell.
+  // If there's a user and we're on a protected page, show the app shell.
   if (user && !isAuthPage) {
     return (
         <>
@@ -73,11 +72,16 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   // If there's no user and we are on an auth page, show the auth page content.
   if (!user && isAuthPage) {
-    return <>{children}</>;
+    return (
+        <>
+            {children}
+            <Toaster />
+        </>
+    );
   }
   
   // This state occurs while the redirect in useEffect is being processed.
-  // Showing a consistent loader prevents content flashing and hydration errors.
+  // Showing a consistent loader prevents content flashing.
   return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-lg">Loading...</div>

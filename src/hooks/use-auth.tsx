@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
@@ -23,7 +23,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to check for Firebase error structure
 function isFirebaseError(error: unknown): error is { code: string } {
     return typeof error === 'object' && error !== null && 'code' in error;
 }
@@ -42,30 +41,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       if (fbUser) {
         const userDocRef = doc(db, 'employees', fbUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          const userData = { id: userDoc.id, ...userDoc.data() } as Employee;
-          if (userData.active) {
-            setUser(userData);
-            setFirebaseUser(fbUser);
+        try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userData = { id: userDoc.id, ...userDoc.data() } as Employee;
+            if (userData.active) {
+              setUser(userData);
+              setFirebaseUser(fbUser);
+            } else {
+              // User is not active, sign them out and clear state
+              await signOut(auth);
+              setUser(null);
+              setFirebaseUser(null);
+            }
           } else {
-            // User is not active, sign them out and clear state
+            // User document doesn't exist, sign them out and clear state
             await signOut(auth);
             setUser(null);
             setFirebaseUser(null);
           }
-        } else {
-             // User document doesn't exist, sign them out and clear state
-             await signOut(auth);
-             setUser(null);
-             setFirebaseUser(null);
+        } catch (error) {
+           // Error fetching doc, sign out and clear state
+           console.error("Error fetching user document:", error);
+           await signOut(auth);
+           setUser(null);
+           setFirebaseUser(null);
         }
       } else {
         // No firebase user, clear state
         setUser(null);
         setFirebaseUser(null);
       }
+      // Only set loading to false after all async operations are done
       setIsLoading(false);
     });
 
@@ -77,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const userCredential = await signInWithEmailAndPassword(auth, email, pass);
         const fbUser = userCredential.user;
 
-        // After successful auth, check Firestore for the user document
+        // After successful auth, check Firestore for the user document and status
         const userDocRef = doc(db, 'employees', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -100,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (isFirebaseError(error)) {
             return error.code;
         }
+        console.error("Unknown login error:", error);
         return 'auth/unknown-error';
     }
   };
@@ -128,19 +136,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       await signOut(auth);
-      router.push('/login');
       return null;
     } catch (error) {
       if (isFirebaseError(error)) {
         return error.code;
       }
+      console.error("Unknown signup error:", error)
       return 'auth/unknown-error';
     }
   }
 
   const logout = async () => {
     await signOut(auth);
-    router.push('/login');
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => {
