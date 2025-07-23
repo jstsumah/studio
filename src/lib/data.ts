@@ -1,12 +1,19 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from './firebase';
 
 // Caching layer to prevent re-fetching data on every navigation
 let companies: Company[] | null = null;
 let employees: Employee[] | null = null;
 let assets: Asset[] | null = null;
+
+// Function to clear the cache after data mutation
+export function clearCache() {
+  companies = null;
+  employees = null;
+  assets = null;
+}
 
 async function fetchCollection<T>(collectionName: string, cache: T[] | null, setCache: (data: T[]) => void): Promise<T[]> {
   if (cache) {
@@ -74,4 +81,10 @@ export const getEmployeeById = async (id: string): Promise<Employee | undefined>
 export const getAssetById = async (id: string): Promise<Asset | undefined> => {
     const allAssets = await getAssets();
     return allAssets.find(a => a.id === id);
+}
+
+export const updateEmployee = async (employeeId: string, data: Partial<Omit<Employee, 'id' | 'email'>>) => {
+    const employeeDocRef = doc(db, 'employees', employeeId);
+    await updateDoc(employeeDocRef, data);
+    clearCache(); // Invalidate cache after update
 }

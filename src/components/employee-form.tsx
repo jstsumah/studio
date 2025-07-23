@@ -3,6 +3,7 @@ import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,21 +18,30 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import type { Employee } from "@/lib/types"
+import { updateEmployee } from "@/lib/data"
+import { LoaderCircle } from "lucide-react"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
+  // Email is not editable
+  // email: z.string().email("Invalid email address"),
   department: z.string().min(1, "Department is required"),
   jobTitle: z.string().min(1, "Job title is required"),
 })
 
 export function EmployeeForm({ onFinished, departments, employee }: { onFinished: () => void, departments: string[], employee?: Employee }) {
   const { toast } = useToast()
+  const router = useRouter()
+  const [isSaving, setIsSaving] = React.useState(false)
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: employee || {
+    defaultValues: employee ? {
+      name: employee.name,
+      department: employee.department,
+      jobTitle: employee.jobTitle,
+    } : {
       name: "",
-      email: "",
       department: "",
       jobTitle: "",
     },
@@ -39,14 +49,27 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
 
   const isEditing = !!employee;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd call an API here to save the employee.
-    console.log(isEditing ? "Employee Updated:" : "New Employee Added:", values)
-    toast({
-      title: `Employee ${isEditing ? 'Updated' : 'Added'}!`,
-      description: `Successfully ${isEditing ? 'updated' : 'added'} ${values.name} ${isEditing ? 'in' : 'to'} the system.`,
-    })
-    onFinished()
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!employee) return; // Should not happen in edit mode
+    
+    setIsSaving(true);
+    try {
+      await updateEmployee(employee.id, values);
+      toast({
+        title: "Employee Updated!",
+        description: `Successfully updated ${values.name} in the system.`,
+      })
+      router.refresh(); // Re-fetch server-side props to get new data
+      onFinished();
+    } catch (error) {
+       toast({
+        title: "Update Failed",
+        description: `Could not update ${values.name}. Please try again.`,
+        variant: "destructive"
+      })
+    } finally {
+        setIsSaving(false);
+    }
   }
 
   return (
@@ -65,19 +88,13 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. jane.doe@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <FormItem>
+            <FormLabel>Email</FormLabel>
+            <FormControl>
+                <Input type="email" value={employee?.email} disabled />
+            </FormControl>
+            <FormMessage />
+        </FormItem>
         <div className="grid grid-cols-2 gap-4">
             <FormField
             control={form.control}
@@ -117,7 +134,10 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
         </div>
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
-            <Button type="submit">{isEditing ? 'Save Changes' : 'Add Employee'}</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <LoaderCircle className="animate-spin mr-2" />}
+              {isEditing ? 'Save Changes' : 'Add Employee'}
+            </Button>
         </div>
       </form>
     </Form>
