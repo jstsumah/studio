@@ -95,14 +95,21 @@ export const createEmployee = async (data: Partial<Omit<Employee, 'id' | 'avatar
     clearCache();
 }
 
-export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | 'warrantyExpiry'>) => {
+export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | 'warrantyExpiry' | 'assignedTo'>) => {
     const assetsCollection = collection(db, 'assets');
     const newAsset: Omit<Asset, 'id'> = {
         ...data,
         status: 'Available',
         history: [],
+        assignedTo: '',
         warrantyExpiry: new Date(new Date(data.purchaseDate).setFullYear(new Date(data.purchaseDate).getFullYear() + 2)).toISOString().split('T')[0], // Set warranty 2 years from purchase
     }
     await addDoc(assetsCollection, newAsset);
     clearCache();
+}
+
+export const updateAsset = async (assetId: string, data: Partial<Omit<Asset, 'id'>>) => {
+    const assetDocRef = doc(db, 'assets', assetId);
+    await updateDoc(assetDocRef, data);
+    clearCache(); // Invalidate cache after update
 }

@@ -34,8 +34,8 @@ import {
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { useToast } from "@/hooks/use-toast"
-import type { Company } from "@/lib/types"
-import { addAsset, clearCache } from "@/lib/data"
+import type { Asset, Company } from "@/lib/types"
+import { addAsset, clearCache, updateAsset } from "@/lib/data"
 import { useDataRefresh } from "@/hooks/use-data-refresh"
 
 const formSchema = z.object({
@@ -51,17 +51,22 @@ const formSchema = z.object({
 
 type RegisterAssetFormValues = z.infer<typeof formSchema>;
 
-export function RegisterAssetForm({ onFinished, companies }: { onFinished: () => void, companies: Company[] }) {
+export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished: () => void, companies: Company[], asset?: Asset | null }) {
   const { toast } = useToast()
   const { refreshData } = useDataRefresh();
   const [isSaving, setIsSaving] = React.useState(false);
 
+  const isEditing = !!asset;
+
   const form = useForm<RegisterAssetFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      serialNumber: "",
-      brand: "",
-      model: "",
+      serialNumber: asset?.serialNumber ?? "",
+      brand: asset?.brand ?? "",
+      model: asset?.model ?? "",
+      category: asset?.category ?? undefined,
+      companyId: asset?.companyId ?? undefined,
+      purchaseDate: asset?.purchaseDate ? new Date(asset.purchaseDate) : undefined,
     },
   })
 
@@ -73,19 +78,27 @@ export function RegisterAssetForm({ onFinished, companies }: { onFinished: () =>
     };
 
     try {
-      await addAsset(assetData);
-      toast({
-        title: "Asset Registered!",
-        description: `Serial Number: ${values.serialNumber} has been added to the inventory.`,
-      });
+      if (isEditing && asset) {
+        await updateAsset(asset.id, assetData);
+        toast({
+          title: "Asset Updated!",
+          description: `Asset ${values.serialNumber} has been updated.`,
+        });
+      } else {
+        await addAsset(assetData);
+        toast({
+          title: "Asset Registered!",
+          description: `Asset ${values.serialNumber} has been added to the inventory.`,
+        });
+      }
       clearCache();
       refreshData();
       onFinished();
     } catch (error) {
-      console.error("Failed to register asset:", error);
+      console.error("Failed to save asset:", error);
       toast({
-        title: "Registration Failed",
-        description: "Could not register the new asset. Please try again.",
+        title: isEditing ? "Update Failed" : "Registration Failed",
+        description: "Could not save the asset. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -230,7 +243,7 @@ export function RegisterAssetForm({ onFinished, companies }: { onFinished: () =>
             <Button type="button" variant="outline" onClick={onFinished} disabled={isSaving}>Cancel</Button>
             <Button type="submit" disabled={isSaving}>
               {isSaving && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-              Register Asset
+              {isEditing ? 'Save Changes' : 'Register Asset'}
             </Button>
         </div>
       </form>

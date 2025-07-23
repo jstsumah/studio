@@ -1,3 +1,4 @@
+
 export type AssetCategory = 'Laptop' | 'Desktop' | 'Phone' | 'Tablet' | 'Other';
 export type AssetStatus = 'Available' | 'In Use' | 'In Repair' | 'Decommissioned';
 
@@ -15,7 +16,7 @@ export type Asset = {
   purchaseDate: string;
   warrantyExpiry: string;
   status: AssetStatus;
-  assignedTo?: string; // Employee ID
+  assignedTo: string; // Employee ID
   photoUrl?: string;
   history: Assignment[];
   companyId: string;

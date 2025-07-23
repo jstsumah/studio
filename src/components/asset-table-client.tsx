@@ -73,6 +73,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { RegisterAssetForm } from './register-asset-form';
+import { updateAsset, clearCache } from '@/lib/data';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
+import { AssignAssetForm } from './assign-asset-form';
 
 const statusConfig: Record<
   AssetStatus,
@@ -104,9 +109,53 @@ export function AssetTableClient({
   employees: Employee[];
   companies: Company[];
 }) {
+  const { refreshData } = useDataRefresh();
+  const { toast } = useToast();
+  
+  const [selectedAsset, setSelectedAsset] = React.useState<Asset | null>(null);
+  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
+  const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [isAssignOpen, setIsAssignOpen] = React.useState(false);
+  const [isDecommissionOpen, setIsDecommissionOpen] = React.useState(false);
 
   const getCompanyById = (id: string): Company | undefined => companies.find(c => c.id === id);
   const getEmployeeById = (id: string): Employee | undefined => employees.find(e => e.id === id);
+
+  const openDialog = (dialog: 'edit' | 'assign' | 'decommission', asset: Asset) => {
+    setSelectedAsset(asset);
+    if (dialog === 'edit') setIsEditOpen(true);
+    if (dialog === 'assign') setIsAssignOpen(true);
+    if (dialog === 'decommission') setIsDecommissionOpen(true);
+  }
+
+  const closeDialogs = () => {
+    setSelectedAsset(null);
+    setIsRegisterOpen(false);
+    setIsEditOpen(false);
+    setIsAssignOpen(false);
+    setIsDecommissionOpen(false);
+  }
+
+  const handleDecommission = async () => {
+    if (!selectedAsset) return;
+    try {
+      await updateAsset(selectedAsset.id, { status: 'Decommissioned', assignedTo: '' });
+      toast({
+        title: 'Asset Decommissioned',
+        description: `Asset ${selectedAsset.serialNumber} has been decommissioned.`,
+      });
+      clearCache();
+      refreshData();
+      closeDialogs();
+    } catch (error) {
+      toast({
+        title: 'Decommission Failed',
+        description: 'Could not decommission the asset. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }
+
 
   const columns: ColumnDef<Asset>[] = [
   {
@@ -260,10 +309,15 @@ export function AssetTableClient({
               Copy Asset ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View Details</DropdownMenuItem>
-            <DropdownMenuItem>Assign Asset</DropdownMenuItem>
-            <DropdownMenuItem>Edit Asset</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Decommission</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openDialog('assign', asset)}>
+              Assign Asset
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => openDialog('edit', asset)}>
+              Edit Asset
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={() => openDialog('decommission', asset)}>
+              Decommission
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -277,7 +331,6 @@ export function AssetTableClient({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
   const table = useReactTable({
@@ -345,6 +398,7 @@ export function AssetTableClient({
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>All Assets</CardTitle>
@@ -367,7 +421,7 @@ export function AssetTableClient({
             </Button>
             <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => setIsRegisterOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Register Asset
                 </Button>
@@ -486,5 +540,41 @@ export function AssetTableClient({
         </div>
       </CardContent>
     </Card>
+
+    <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={closeDialogs}>
+            <DialogHeader>
+                <DialogTitle>Edit Asset</DialogTitle>
+                <DialogDescription>Update the details for asset: {selectedAsset?.serialNumber}</DialogDescription>
+            </DialogHeader>
+            <RegisterAssetForm onFinished={closeDialogs} companies={companies} asset={selectedAsset} />
+        </DialogContent>
+    </Dialog>
+
+    <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={closeDialogs}>
+            <DialogHeader>
+                <DialogTitle>Assign Asset</DialogTitle>
+                <DialogDescription>Assign asset {selectedAsset?.serialNumber} to an employee.</DialogDescription>
+            </DialogHeader>
+            <AssignAssetForm onFinished={closeDialogs} employees={employees} asset={selectedAsset!} />
+        </DialogContent>
+    </Dialog>
+
+    <AlertDialog open={isDecommissionOpen} onOpenChange={setIsDecommissionOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+                This action will mark the asset {selectedAsset?.serialNumber} as decommissioned. This cannot be easily undone.
+            </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+            <AlertDialogCancel onClick={closeDialogs}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDecommission} className="bg-destructive hover:bg-destructive/90">Decommission</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
