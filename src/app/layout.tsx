@@ -48,8 +48,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, pathname, router]);
 
 
-  // While loading auth state, show a global loading screen.
-  // This is safe from hydration errors because `isLoading` is initially true on both server and client.
+  // While loading auth state, or if the user state doesn't match the page type yet,
+  // show a global loading screen. This is safe from hydration errors because it doesn't
+  // depend on client-side state that changes before hydration.
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -74,12 +75,12 @@ function AppContent({ children }: { children: React.ReactNode }) {
   if (!user && isAuthPage) {
     return <>{children}</>;
   }
-
-  // In all other cases (e.g., waiting for the redirect useEffect to run), show a generic loader.
-  // This prevents content from flashing before a redirect occurs.
+  
+  // This state occurs while the redirect in useEffect is being processed.
+  // Showing a consistent loader prevents content flashing and hydration errors.
   return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Redirecting...</div>
+        <div className="text-lg">Loading...</div>
       </div>
     );
 }
