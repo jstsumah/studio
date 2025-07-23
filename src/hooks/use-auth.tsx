@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
 
   const isAdmin = user?.role === 'Admin';
@@ -51,16 +50,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(userData);
             setFirebaseUser(fbUser);
           } else {
+            // User is not active, sign them out and clear state
             await signOut(auth);
             setUser(null);
             setFirebaseUser(null);
           }
         } else {
+             // User document doesn't exist, sign them out and clear state
              await signOut(auth);
              setUser(null);
              setFirebaseUser(null);
         }
       } else {
+        // No firebase user, clear state
         setUser(null);
         setFirebaseUser(null);
       }
@@ -81,14 +83,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (!userDoc.exists()) {
             await signOut(auth);
-            return 'auth/user-not-found'; // Custom code
+            return 'auth/user-not-found';
         }
 
         const userData = userDoc.data() as Omit<Employee, 'id'>;
 
         if (!userData.active) {
             await signOut(auth);
-            return 'auth/user-not-active'; // Custom code
+            return 'auth/user-not-active';
         }
         
         // If everything is fine, the onAuthStateChanged listener will handle setting the user state.
