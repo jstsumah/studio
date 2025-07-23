@@ -222,7 +222,10 @@ export function AssetTableClient({
     accessorKey: 'assetValue',
     header: 'Value',
     cell: ({ row }) => {
-        const value = row.getValue('assetValue') as number;
+        const value = row.getValue('assetValue') as number | undefined | null;
+        if (typeof value !== 'number') {
+            return <span>$0</span>
+        }
         return <span>${value.toLocaleString()}</span>
     },
     meta: {
