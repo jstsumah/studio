@@ -1,6 +1,6 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, addDoc } from "firebase/firestore";
 import { db } from './firebase';
 
 // Caching layer to prevent re-fetching data on every navigation
@@ -83,8 +83,17 @@ export const getAssetById = async (id: string): Promise<Asset | undefined> => {
     return allAssets.find(a => a.id === id);
 }
 
-export const updateEmployee = async (employeeId: string, data: Partial<Omit<Employee, 'id' | 'email'>>) => {
+export const updateEmployee = async (employeeId: string, data: Partial<Omit<Employee, 'id'>>) => {
     const employeeDocRef = doc(db, 'employees', employeeId);
     await updateDoc(employeeDocRef, data);
     clearCache(); // Invalidate cache after update
+}
+
+export const createEmployee = async (data: Omit<Employee, 'id'>) => {
+    // In a real app, you'd likely want to create the user in Firebase Auth first,
+    // then use that UID as the document ID here.
+    // For now, we'll just add a new document.
+    const employeesCollection = collection(db, 'employees');
+    await addDoc(employeesCollection, { ...data, avatarUrl: '' }); // Add with empty avatar
+    clearCache();
 }

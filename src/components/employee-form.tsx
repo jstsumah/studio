@@ -18,13 +18,12 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import type { Employee } from "@/lib/types"
-import { updateEmployee } from "@/lib/data"
+import { updateEmployee, clearCache, createEmployee } from "@/lib/data"
 import { LoaderCircle } from "lucide-react"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  // Email is not editable
-  // email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address"),
   department: z.string().min(1, "Department is required"),
   jobTitle: z.string().min(1, "Job title is required"),
 })
@@ -36,35 +35,39 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: employee ? {
-      name: employee.name,
-      department: employee.department,
-      jobTitle: employee.jobTitle,
-    } : {
-      name: "",
-      department: "",
-      jobTitle: "",
+    defaultValues: {
+      name: employee?.name ?? "",
+      email: employee?.email ?? "",
+      department: employee?.department ?? "",
+      jobTitle: employee?.jobTitle ?? "",
     },
   })
 
   const isEditing = !!employee;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!employee) return; // Should not happen in edit mode
-    
     setIsSaving(true);
     try {
-      await updateEmployee(employee.id, values);
-      toast({
-        title: "Employee Updated!",
-        description: `Successfully updated ${values.name} in the system.`,
-      })
-      router.refresh(); // Re-fetch server-side props to get new data
+      if (isEditing && employee) {
+        await updateEmployee(employee.id, values);
+        toast({
+            title: "Employee Updated!",
+            description: `Successfully updated ${values.name} in the system.`,
+        });
+      } else {
+        await createEmployee(values);
+        toast({
+            title: "Employee Added!",
+            description: `Successfully added ${values.name} to the system.`,
+        });
+      }
+      clearCache();
+      router.refresh(); 
       onFinished();
     } catch (error) {
        toast({
-        title: "Update Failed",
-        description: `Could not update ${values.name}. Please try again.`,
+        title: isEditing ? "Update Failed" : "Creation Failed",
+        description: `Could not save ${values.name}. Please try again.`,
         variant: "destructive"
       })
     } finally {
@@ -88,13 +91,19 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
             </FormItem>
           )}
         />
-        <FormItem>
-            <FormLabel>Email</FormLabel>
-            <FormControl>
-                <Input type="email" value={employee?.email} disabled />
-            </FormControl>
-            <FormMessage />
-        </FormItem>
+        <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                        <Input type="email" placeholder="e.g. name@example.com" {...field} disabled={isEditing} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
         <div className="grid grid-cols-2 gap-4">
             <FormField
             control={form.control}
