@@ -30,17 +30,17 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (isLoading) {
-      return; // Do nothing while loading.
+      return; // Wait until the auth state is determined.
     }
 
     const isAuthPage = pathname === '/login' || pathname === '/signup';
     
-    // If we have a user and they are on an auth page, redirect to home.
+    // Redirect to home if a logged-in user is trying to access login/signup.
     if (user && isAuthPage) {
       router.push('/');
     }
     
-    // If we have no user and they are on a protected page, redirect to login.
+    // Redirect to login if a non-logged-in user is trying to access a protected page.
     if (!user && !isAuthPage) {
       router.push('/login');
     }
@@ -48,7 +48,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
   }, [user, isLoading, pathname, router]);
 
 
-  // While loading, show a global loading screen.
+  // While loading auth state, show a global loading screen.
+  // This is safe from hydration errors because `isLoading` is initially true on both server and client.
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -59,8 +60,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-  // If there's a user, show the app.
-  if (user) {
+  // If there's a user and we're not on an auth page, show the app shell.
+  if (user && !isAuthPage) {
     return (
         <>
         <AppShell>{children}</AppShell>
@@ -69,12 +70,13 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If there's no user, but we are on an auth page, show the auth page.
+  // If there's no user and we are on an auth page, show the auth page content.
   if (!user && isAuthPage) {
     return <>{children}</>;
   }
 
-  // Fallback for edge cases, though the useEffect should handle redirection.
+  // In all other cases (e.g., waiting for the redirect useEffect to run), show a generic loader.
+  // This prevents content from flashing before a redirect occurs.
   return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-lg">Redirecting...</div>
