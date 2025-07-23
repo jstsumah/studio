@@ -87,6 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (name: string, email: string, pass: string) => {
+    try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
@@ -110,6 +111,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await signOut(auth); // Sign out the user immediately after signup
       router.push('/login');
+    } catch (error) {
+      // Re-throw the error so the form can catch it and display a message
+      throw error;
+    }
   }
 
   const logout = async () => {

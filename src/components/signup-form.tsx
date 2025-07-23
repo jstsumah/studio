@@ -28,6 +28,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -54,9 +55,15 @@ export function SignupForm() {
     try {
         await signup(values.name, values.email, values.password);
     } catch (error: any) {
+        let description = 'Could not create account. Please try again.';
+        if (error instanceof FirebaseError) {
+            if (error.code === 'auth/email-already-in-use') {
+                description = 'This email address is already in use. Please use a different email or log in.';
+            }
+        }
         toast({
             title: 'Signup Failed',
-            description: error.message || 'Could not create account.',
+            description,
             variant: 'destructive'
         });
     } finally {
@@ -122,7 +129,7 @@ export function SignupForm() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <LoaderCircle className="animate-spin" />}
+              {isLoading && <LoaderCircle className="animate-spin mr-2" />}
               Create Account
             </Button>
             <div className="text-center text-sm">
