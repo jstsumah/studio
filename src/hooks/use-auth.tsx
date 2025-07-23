@@ -5,7 +5,8 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
+import { auth, db, storage } from '@/lib/firebase';
 import type { Employee } from '@/lib/types';
 import { useToast } from './use-toast';
 
@@ -15,7 +16,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   signup: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id'>>) => Promise<void>;
+  updateUser: (data: Partial<Omit<Employee, 'id'>>, newAvatarDataUrl?: string | null) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -32,8 +33,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
-        // This check is crucial on signup. The user state might already be set
-        // by the signup function. If so, we don't need to do anything.
         if (fbUser.uid === user?.id) {
           setIsLoading(false);
           return;
@@ -45,8 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (userDoc.exists()) {
           setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
         } else {
-            // This case handles when a user is in auth but their DB doc was deleted.
-            // We should not be in here during a normal signup flow anymore.
              if (pathname !== '/signup') {
                console.warn("User document not found for an existing auth user. Signing out.");
                await signOut(auth);
@@ -59,13 +56,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [pathname, user]);
 
   const login = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
-    // onAuthStateChanged will handle setting state and routing.
   };
 
   const signup = async (name: string, email: string, pass: string) => {
@@ -77,32 +72,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         department: 'Unassigned',
         jobTitle: 'New Employee',
-        avatarUrl: '', // Start with an empty avatar URL
+        avatarUrl: '',
       };
       
-      // Create the user document in Firestore
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
       
-      // Manually set the user state to prevent race conditions.
-      // This is the key to fixing the signup loop.
       setUser({ id: newUser.uid, ...newEmployeeData });
       setFirebaseUser(newUser);
 
-      // The app will now redirect to the dashboard.
       router.push('/');
   }
 
   const logout = async () => {
     await signOut(auth);
-    // onAuthStateChanged will set user state to null
     router.push('/login');
   };
 
-  const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
+  const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarDataUrl?: string | null) => {
     if (user) {
-      const userDocRef = doc(db, 'employees', user.id);
-      await updateDoc(userDocRef, data);
-      setUser(prevUser => prevUser ? { ...prevUser, ...data } : null);
+        const userDocRef = doc(db, 'employees', user.id);
+        const updateData = { ...data };
+
+        if (newAvatarDataUrl) {
+            const storageRef = ref(storage, `avatars/${user.id}`);
+            try {
+                await uploadString(storageRef, newAvatarDataUrl, 'data_url');
+                const downloadURL = await getDownloadURL(storageRef);
+                updateData.avatarUrl = downloadURL;
+            } catch (error) {
+                console.error("Error uploading avatar:", error);
+                toast({
+                    title: 'Avatar Upload Failed',
+                    description: 'Could not upload your new profile picture. Please try again.',
+                    variant: 'destructive',
+                });
+                return;
+            }
+        }
+
+      await updateDoc(userDocRef, updateData);
+      setUser(prevUser => prevUser ? { ...prevUser, ...updateData } : null);
        toast({
         title: 'Profile Updated!',
         description: 'Your information has been successfully updated.',
