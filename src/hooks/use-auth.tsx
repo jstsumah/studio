@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser, FirebaseError } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from '@/lib/firebase';
@@ -13,8 +13,8 @@ import { useToast } from './use-toast';
 interface AuthContextType {
   user: Employee | null;
   firebaseUser: FirebaseUser | null;
-  login: (email: string, pass: string) => Promise<void>;
-  signup: (name: string, email: string, pass: string) => Promise<void>;
+  login: (email: string, pass: string) => Promise<string | null>;
+  signup: (name: string, email: string, pass: string) => Promise<string | null>;
   logout: () => void;
   updateUser: (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => Promise<void>;
   isLoading: boolean;
@@ -22,6 +22,11 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper to check for Firebase error structure
+function isFirebaseError(error: unknown): error is { code: string } {
+    return typeof error === 'object' && error !== null && 'code' in error;
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Employee | null>(null);
@@ -77,16 +82,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [pathname, user, toast]);
 
-  const login = async (email: string, pass: string) => {
+  const login = async (email: string, pass: string): Promise<string | null> => {
     try {
         await signInWithEmailAndPassword(auth, email, pass);
+        return null;
     } catch (error) {
-        // Re-throw the error so the form can catch it and display a message
-        throw error;
+        if (isFirebaseError(error)) {
+            return error.code;
+        }
+        return 'auth/unknown-error';
     }
   };
 
-  const signup = async (name: string, email: string, pass: string) => {
+  const signup = async (name: string, email: string, pass: string): Promise<string | null> => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
@@ -111,9 +119,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await signOut(auth); // Sign out the user immediately after signup
       router.push('/login');
+      return null;
     } catch (error) {
-      // Re-throw the error so the form can catch it and display a message
-      throw error;
+      if (isFirebaseError(error)) {
+        return error.code;
+      }
+      return 'auth/unknown-error';
     }
   }
 

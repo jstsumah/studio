@@ -28,7 +28,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
-import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -50,29 +49,29 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    try {
-      await login(values.email, values.password);
-    } catch (error: any) {
+    const errorCode = await login(values.email, values.password);
+    setIsLoading(false);
+
+    if (errorCode) {
       let description = 'An unknown error occurred. Please try again.';
-      if (error instanceof FirebaseError) {
-        switch (error.code) {
-          case 'auth/invalid-credential':
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-            description = 'Invalid email or password. Please check your credentials.';
-            break;
-          default:
-            description = 'An authentication error occurred. Please try again later.';
-            break;
-        }
+      switch (errorCode) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          description = 'Invalid email or password. Please check your credentials.';
+          break;
+        case 'auth/too-many-requests':
+           description = 'Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.';
+           break;
+        default:
+          description = 'An authentication error occurred. Please try again later.';
+          break;
       }
-       toast({
+      toast({
         title: 'Login Failed',
         description,
-        variant: 'destructive'
-      })
-    } finally {
-        setIsLoading(false);
+        variant: 'destructive',
+      });
     }
   }
 
