@@ -34,15 +34,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setIsLoading(true);
       if (fbUser) {
+        // If the user is already in our state, we don't need to re-fetch
+        if (fbUser.uid === user?.id) {
+          setIsLoading(false);
+          return;
+        }
+
         setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'employees', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
+
         if (userDoc.exists()) {
           setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
         } else {
-            // This case is now primarily for when a user is in auth but their DB doc
-            // was deleted, or for the small window during signup before the user state is manually set.
-            // We'll give a small grace period for signup to complete.
+            // This case handles when a user is in auth but their DB doc was deleted.
+            // Or the small window during signup before the user state is manually set.
+            // The signup function now handles setting state, so this should primarily be a cleanup function.
             if (pathname !== '/signup') {
                console.error("User document not found for an existing auth user. Signing out.");
                await signOut(auth);
@@ -58,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, [pathname]);
+  }, [pathname]); // Rerun on path change to handle specific cases if needed
 
 
   useEffect(() => {
@@ -97,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
       
       // Manually set the user and firebaseUser state to prevent the race condition
+      // This is the key to fixing the signup loop
       setUser({ id: newUser.uid, ...newEmployeeData });
       setFirebaseUser(newUser);
       
