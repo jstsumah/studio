@@ -70,7 +70,8 @@ const assets: Omit<Asset, 'id'>[] = [
     companyId: 'acme-corp',
     history: [
       { date: '2023-01-20', assignedTo: 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2', status: 'In Use', notes: 'Initial assignment' }
-    ]
+    ],
+    assetValue: 2200,
   },
   {
     serialNumber: 'SN-MON-002',
@@ -81,7 +82,8 @@ const assets: Omit<Asset, 'id'>[] = [
     warrantyExpiry: '2025-11-04',
     status: 'Available',
     companyId: 'acme-corp',
-    history: []
+    history: [],
+    assetValue: 800,
   },
    {
     serialNumber: 'SN-PHN-003',
@@ -95,7 +97,8 @@ const assets: Omit<Asset, 'id'>[] = [
     companyId: 'omni-consumer',
     history: [
        { date: '2023-09-25', assignedTo: 'mB8vY4zP9tX3rW1oI7uE5sA2gC3', status: 'In Use', notes: 'New phone for engineering team' }
-    ]
+    ],
+    assetValue: 1199,
   },
   {
     serialNumber: 'SN-DESK-004',
@@ -106,7 +109,8 @@ const assets: Omit<Asset, 'id'>[] = [
     warrantyExpiry: '2026-05-09',
     status: 'In Repair',
     companyId: 'acme-corp',
-    history: []
+    history: [],
+    assetValue: 1850,
   },
    {
     serialNumber: 'SN-TAB-005',
@@ -117,7 +121,8 @@ const assets: Omit<Asset, 'id'>[] = [
     warrantyExpiry: '2025-07-31',
     status: 'Decommissioned',
     companyId: 'stark-industries',
-    history: []
+    history: [],
+    assetValue: 950,
   }
 ];
 

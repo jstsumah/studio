@@ -28,9 +28,11 @@ import type { Asset, Employee } from "@/lib/types"
 import { updateAsset, clearCache } from "@/lib/data"
 import { useDataRefresh } from "@/hooks/use-data-refresh"
 import { format } from "date-fns"
+import { Textarea } from "./ui/textarea"
 
 const formSchema = z.object({
   employeeId: z.string().min(1, "An employee must be selected."),
+  notes: z.string().optional(),
 })
 
 type AssignAssetFormValues = z.infer<typeof formSchema>;
@@ -44,6 +46,7 @@ export function AssignAssetForm({ onFinished, employees, asset }: { onFinished: 
     resolver: zodResolver(formSchema),
     defaultValues: {
         employeeId: asset.assignedTo ?? undefined,
+        notes: '',
     }
   })
 
@@ -53,7 +56,7 @@ export function AssignAssetForm({ onFinished, employees, asset }: { onFinished: 
         date: format(new Date(), 'yyyy-MM-dd'),
         assignedTo: values.employeeId,
         status: 'In Use' as const,
-        notes: 'Assigned via web interface'
+        notes: values.notes || 'Assigned via web interface'
     }
 
     try {
@@ -103,6 +106,20 @@ export function AssignAssetForm({ onFinished, employees, asset }: { onFinished: 
                 </SelectContent>
               </Select>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+                <FormLabel>Notes (Optional)</FormLabel>
+                <FormControl>
+                    <Textarea placeholder="e.g. Temporary assignment for Q3 project." {...field} />
+                </FormControl>
+                <FormMessage />
             </FormItem>
           )}
         />

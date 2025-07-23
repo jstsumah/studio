@@ -47,6 +47,7 @@ const formSchema = z.object({
   purchaseDate: z.date({
     required_error: "A purchase date is required.",
   }),
+  assetValue: z.coerce.number().min(0, "Asset value must be a positive number."),
 })
 
 type RegisterAssetFormValues = z.infer<typeof formSchema>;
@@ -67,6 +68,7 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
       category: asset?.category ?? undefined,
       companyId: asset?.companyId ?? undefined,
       purchaseDate: asset?.purchaseDate ? new Date(asset.purchaseDate) : undefined,
+      assetValue: asset?.assetValue ?? 0,
     },
   })
 
@@ -198,47 +200,62 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
             )}
           />
         </div>
-        <FormField
-          control={form.control}
-          name="purchaseDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Purchase Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="purchaseDate"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                <FormLabel>Purchase Date</FormLabel>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <FormControl>
+                        <Button
+                        variant={"outline"}
+                        className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                        )}
+                        >
+                        {field.value ? (
+                            format(field.value, "PPP")
+                        ) : (
+                            <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                    </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                    />
+                    </PopoverContent>
+                </Popover>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+                control={form.control}
+                name="assetValue"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Asset Value ($)</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="e.g. 1500" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
         <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onFinished} disabled={isSaving}>Cancel</Button>
             <Button type="submit" disabled={isSaving}>

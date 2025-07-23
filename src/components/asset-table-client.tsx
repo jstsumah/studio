@@ -219,17 +219,11 @@ export function AssetTableClient({
     ),
   },
   {
-    accessorKey: 'companyId',
-    header: 'Company',
+    accessorKey: 'assetValue',
+    header: 'Value',
     cell: ({ row }) => {
-      const companyId = row.getValue('companyId') as string;
-      const company = getCompanyById(companyId);
-      return (
-        <div className="flex items-center gap-2">
-          <Building className="h-4 w-4 text-muted-foreground" />
-          <span>{company?.name ?? 'Unknown'}</span>
-        </div>
-      );
+        const value = row.getValue('assetValue') as number;
+        return <span>${value.toLocaleString()}</span>
     },
     meta: {
       className: 'hidden md:table-cell',
@@ -336,7 +330,6 @@ export function AssetTableClient({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
-        'companyId': false,
         'purchaseDate': false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
@@ -388,7 +381,8 @@ export function AssetTableClient({
             'Company': company?.name,
             'Status': asset.status,
             'Assigned To': assignedTo,
-            'Purchase Date': asset.purchaseDate
+            'Purchase Date': asset.purchaseDate,
+            'Asset Value': asset.assetValue,
         };
     });
 
@@ -409,13 +403,13 @@ export function AssetTableClient({
   React.useEffect(() => {
     // Hide columns on mobile
     if (window.innerWidth < 768) {
-      table.getColumn('companyId')?.toggleVisibility(false);
+      table.getColumn('assetValue')?.toggleVisibility(false);
       table.getColumn('purchaseDate')?.toggleVisibility(false);
     } else if (window.innerWidth < 1024) {
-      table.getColumn('companyId')?.toggleVisibility(true);
+      table.getColumn('assetValue')?.toggleVisibility(true);
       table.getColumn('purchaseDate')?.toggleVisibility(false);
     } else {
-       table.getColumn('companyId')?.toggleVisibility(true);
+       table.getColumn('assetValue')?.toggleVisibility(true);
        table.getColumn('purchaseDate')?.toggleVisibility(true);
     }
   }, [table]);

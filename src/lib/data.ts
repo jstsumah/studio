@@ -48,16 +48,18 @@ async function fetchRecentActivity(): Promise<RecentActivity[]> {
         // Ensure history exists and is an array
         if (Array.isArray(asset.history)) {
             asset.history.forEach(h => {
-                const employee = allEmployees.find(e => e.id === h.assignedTo);
-                if (employee) {
-                     generatedActivity.push({
-                        assetId: asset.id,
-                        assetSerial: asset.serialNumber,
-                        employeeId: employee.id,
-                        employeeName: employee.name,
-                        date: h.date,
-                        action: h.status === 'In Use' ? 'Assigned' : 'Returned' // Simplified logic
-                    });
+                if (h.assignedTo && h.assignedTo !== 'Unassigned') {
+                    const employee = allEmployees.find(e => e.id === h.assignedTo);
+                    if (employee) {
+                        generatedActivity.push({
+                            assetId: asset.id,
+                            assetSerial: asset.serialNumber,
+                            employeeId: employee.id,
+                            employeeName: employee.name,
+                            date: h.date,
+                            action: h.status === 'In Use' ? 'Assigned' : 'Returned' // Simplified logic
+                        });
+                    }
                 }
             })
         }

@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -44,17 +43,17 @@ export default function DashboardPage() {
 
         // Calculate stats based on the filtered assets
         const totalAssets = dashboardAssets.length;
+        const totalValue = dashboardAssets.reduce((sum, asset) => sum + (asset.assetValue || 0), 0);
         const assignedAssets = dashboardAssets.filter(a => a.status === 'In Use').length;
         const availableAssets = dashboardAssets.filter(a => a.status === 'Available').length;
         const inRepairAssets = dashboardAssets.filter(a => a.status === 'In Repair').length;
-        const decomissionedAssets = dashboardAssets.filter(a => a.status === 'Decommissioned').length;
 
         setStats({
           total: totalAssets,
+          value: totalValue,
           inUse: assignedAssets,
           available: availableAssets,
           inRepair: inRepairAssets,
-          decommissioned: decomissionedAssets,
         });
 
         const assetsByCategory = dashboardAssets.reduce((acc, asset) => {

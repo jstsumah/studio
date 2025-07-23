@@ -20,6 +20,7 @@ export type Asset = {
   photoUrl?: string;
   history: Assignment[];
   companyId: string;
+  assetValue: number;
 };
 
 export type Employee = {
@@ -35,7 +36,7 @@ export type Employee = {
 
 export type Assignment = {
   date: string;
-  assignedTo: string; // Employee name or 'Unassigned'
+  assignedTo: string; // Employee ID or 'Unassigned'
   status: AssetStatus;
   notes?: string;
 };
