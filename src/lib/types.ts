@@ -30,6 +30,7 @@ export type Employee = {
   email: string;
   avatarUrl: string;
   role: 'Admin' | 'Employee';
+  active: boolean;
 };
 
 export type Assignment = {

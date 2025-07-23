@@ -44,10 +44,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         const userDocRef = doc(db, 'employees', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
-        setFirebaseUser(fbUser);
         
         if (userDoc.exists()) {
-          setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+          const userData = { id: userDoc.id, ...userDoc.data() } as Employee;
+          if (userData.active) {
+            setUser(userData);
+            setFirebaseUser(fbUser);
+          } else {
+            toast({
+                title: 'Account Pending Activation',
+                description: 'Your account has been created but must be activated by an administrator before you can log in.',
+                variant: 'destructive',
+                duration: 9000
+            });
+            await signOut(auth); // Sign out user if they are not active
+            setUser(null);
+            setFirebaseUser(null);
+          }
         } else {
              if (pathname !== '/signup') {
                console.warn("User document not found for an existing auth user. Signing out.");
@@ -62,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [pathname, user]);
+  }, [pathname, user, toast]);
 
   const login = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
@@ -79,14 +92,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         jobTitle: 'New Employee',
         avatarUrl: '',
         role: 'Employee', // New users are always 'Employee'
+        active: false, // New users are inactive by default
       };
       
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
       
-      setUser({ id: newUser.uid, ...newEmployeeData });
-      setFirebaseUser(newUser);
+      toast({
+        title: 'Account Created!',
+        description: 'Your account is now pending activation by an administrator.',
+        duration: 9000,
+      });
 
-      router.push('/');
+      await signOut(auth); // Sign out the user immediately after signup
+      router.push('/login');
   }
 
   const logout = async () => {

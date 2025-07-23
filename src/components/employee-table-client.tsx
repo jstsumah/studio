@@ -8,6 +8,8 @@ import {
   MoreHorizontal,
   PlusCircle,
   ShieldCheck,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 
 import type {
@@ -65,12 +67,15 @@ import { EmployeeForm } from "./employee-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "./ui/badge";
+import { clearCache, updateEmployee } from "@/lib/data";
+import { useDataRefresh } from "@/hooks/use-data-refresh";
 
 export function EmployeeTableClient({
   employees,
 }: {
   employees: Employee[];
 }) {
+  const { refreshData } = useDataRefresh();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
@@ -100,6 +105,24 @@ export function EmployeeTableClient({
   const closeAlert = () => {
     setIsAlertOpen(false);
     setSelectedEmployee(undefined);
+  }
+
+  const handleActivate = async (employee: Employee) => {
+    try {
+      await updateEmployee(employee.id, { active: true });
+      toast({
+        title: "User Activated",
+        description: `${employee.name} can now log in to the application.`,
+      });
+      clearCache();
+      refreshData();
+    } catch (error) {
+      toast({
+        title: "Activation Failed",
+        description: "Could not activate the user. Please try again.",
+        variant: "destructive"
+      });
+    }
   }
 
   const handleDelete = () => {
@@ -181,11 +204,20 @@ export function EmployeeTableClient({
       }
     },
     {
-      accessorKey: "jobTitle",
-      header: "Job Title",
-      meta: {
-        className: 'hidden lg:table-cell',
-      }
+      accessorKey: "active",
+      header: "Status",
+      cell: ({ row }) => {
+        const isActive = row.getValue("active");
+        return isActive ? (
+          <Badge variant="outline" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-500" /> Active
+          </Badge>
+        ) : (
+          <Badge variant="secondary" className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-yellow-500" /> Pending
+          </Badge>
+        );
+      },
     },
     {
       id: "actions",
@@ -202,6 +234,13 @@ export function EmployeeTableClient({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              {!employee.active && (
+                <DropdownMenuItem onClick={() => handleActivate(employee)}>
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                  Activate User
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(employee.id);
@@ -214,7 +253,6 @@ export function EmployeeTableClient({
                 Copy Employee ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
               <DropdownMenuItem className="text-destructive" onClick={() => openAlert(employee)}>Delete Employee</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
