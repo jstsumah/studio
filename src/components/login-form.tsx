@@ -55,10 +55,13 @@ export function LoginForm() {
     if (errorCode) {
       let description = 'An unknown error occurred. Please try again.';
       switch (errorCode) {
-        case 'auth/invalid-credential':
         case 'auth/user-not-found':
         case 'auth/wrong-password':
-          description = 'Invalid email or password. Please check your credentials.';
+        case 'auth/invalid-credential':
+          description = 'Invalid email or password. Please check your credentials and try again.';
+          break;
+        case 'auth/user-not-active':
+          description = 'This account is pending activation by an administrator.';
           break;
         case 'auth/too-many-requests':
            description = 'Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.';

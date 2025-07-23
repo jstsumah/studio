@@ -40,13 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setIsLoading(true);
       if (fbUser) {
-        // If user is already loaded, no need to fetch again.
-        if (fbUser.uid === user?.id) {
-          setIsLoading(false);
-          return;
-        }
-        
         const userDocRef = doc(db, 'employees', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
         
@@ -56,21 +51,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(userData);
             setFirebaseUser(fbUser);
           } else {
-            toast({
-                title: 'Account Pending Activation',
-                description: 'Your account has been created but must be activated by an administrator before you can log in.',
-                variant: 'destructive',
-                duration: 9000
-            });
-            await signOut(auth); // Sign out user if they are not active
+            await signOut(auth);
             setUser(null);
             setFirebaseUser(null);
           }
         } else {
-             if (pathname !== '/signup') {
-               console.warn("User document not found for an existing auth user. Signing out.");
-               await signOut(auth);
-            }
+             await signOut(auth);
+             setUser(null);
+             setFirebaseUser(null);
         }
       } else {
         setUser(null);
@@ -80,12 +68,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, [pathname, user, toast]);
+  }, []);
 
   const login = async (email: string, pass: string): Promise<string | null> => {
     try {
-        await signInWithEmailAndPassword(auth, email, pass);
+        const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+        const fbUser = userCredential.user;
+
+        // After successful auth, check Firestore for the user document
+        const userDocRef = doc(db, 'employees', fbUser.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            await signOut(auth);
+            return 'auth/user-not-found'; // Custom code
+        }
+
+        const userData = userDoc.data() as Omit<Employee, 'id'>;
+
+        if (!userData.active) {
+            await signOut(auth);
+            return 'auth/user-not-active'; // Custom code
+        }
+        
+        // If everything is fine, the onAuthStateChanged listener will handle setting the user state.
         return null;
+
     } catch (error) {
         if (isFirebaseError(error)) {
             return error.code;
@@ -105,8 +113,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         department: 'Unassigned',
         jobTitle: 'New Employee',
         avatarUrl: '',
-        role: 'Employee', // New users are always 'Employee'
-        active: false, // New users are inactive by default
+        role: 'Employee',
+        active: false, 
       };
       
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
@@ -117,7 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         duration: 9000,
       });
 
-      await signOut(auth); // Sign out the user immediately after signup
+      await signOut(auth);
       router.push('/login');
       return null;
     } catch (error) {
