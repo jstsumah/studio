@@ -17,6 +17,8 @@ const nextConfig: NextConfig = {
     // This is required to allow the Next.js dev server to accept requests from
     // the preview server.
     allowedDevOrigins: ['https://*.cloudworkstations.dev'],
+    // Ensures the development indicator and dev tools are available.
+    devTools: true,
   },
 };
 
