@@ -7,14 +7,12 @@ import {
   Briefcase,
   CheckCircle,
   Clock,
-  DollarSign,
   HardDrive,
   Laptop,
   Smartphone,
   Tablet,
   Users,
   Wrench,
-  XCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -126,10 +124,10 @@ export function DashboardClient({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.value.toLocaleString()}</div>
+            <div className="text-2xl font-bold">KES {stats.value.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Combined value of all assets</p>
           </CardContent>
         </Card>
@@ -273,3 +271,5 @@ export function DashboardClient({
     </div>
   );
 }
+
+    

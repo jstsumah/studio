@@ -247,7 +247,7 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
                 name="assetValue"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Asset Value ($)</FormLabel>
+                    <FormLabel>Asset Value (KES)</FormLabel>
                     <FormControl>
                         <Input type="number" placeholder="e.g. 1500" {...field} />
                     </FormControl>
@@ -267,3 +267,5 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
     </Form>
   )
 }
+
+    

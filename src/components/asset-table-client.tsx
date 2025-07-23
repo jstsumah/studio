@@ -224,9 +224,9 @@ export function AssetTableClient({
     cell: ({ row }) => {
         const value = row.getValue('assetValue') as number | undefined | null;
         if (typeof value !== 'number') {
-            return <span>$0</span>
+            return <span>KES 0</span>
         }
-        return <span>${value.toLocaleString()}</span>
+        return <span>KES {value.toLocaleString()}</span>
     },
     meta: {
       className: 'hidden md:table-cell',
@@ -599,3 +599,5 @@ export function AssetTableClient({
     </>
   );
 }
+
+    
