@@ -7,6 +7,7 @@ import { ReportsClient } from '@/components/reports-client';
 import type { Asset, Employee, Company } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 
 export default function ReportsPage() {
@@ -14,6 +15,7 @@ export default function ReportsPage() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [companies, setCompanies] = React.useState<Company[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { dataVersion } = useDataRefresh();
 
   React.useEffect(() => {
     async function loadData() {
@@ -34,7 +36,7 @@ export default function ReportsPage() {
         }
     }
     loadData();
-  }, []);
+  }, [dataVersion]);
 
   if (isLoading) {
     return (

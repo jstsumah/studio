@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProfileForm } from '@/components/profile-form';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { dataVersion } = useDataRefresh();
 
   React.useEffect(() => {
     async function loadData() {
@@ -44,7 +46,7 @@ export default function ProfilePage() {
       }
     }
     loadData();
-  }, [user]);
+  }, [user, dataVersion]);
 
   // Memoize assets to prevent re-filtering on every render
   const assignedAssets = React.useMemo(() => {

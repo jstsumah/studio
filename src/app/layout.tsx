@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import './globals.css';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { DataRefreshProvider } from '@/hooks/use-data-refresh';
 
 
 const fontInter = Inter({
@@ -98,7 +99,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <AppContent>{children}</AppContent>
+          <DataRefreshProvider>
+            <AppContent>{children}</AppContent>
+          </DataRefreshProvider>
         </AuthProvider>
       </body>
     </html>

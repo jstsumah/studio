@@ -7,6 +7,7 @@ import { getAssets, getEmployees, getRecentActivity } from '@/lib/data';
 import { DashboardClient } from '@/components/dashboard-client';
 import type { Asset, Employee, RecentActivity as RecentActivityType } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 export default function DashboardPage() {
   const [stats, setStats] = React.useState<any>(null);
@@ -14,6 +15,7 @@ export default function DashboardPage() {
   const [recentActivity, setRecentActivity] = React.useState<RecentActivityType[]>([]);
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { dataVersion } = useDataRefresh();
 
   React.useEffect(() => {
     async function loadData() {
@@ -64,7 +66,7 @@ export default function DashboardPage() {
       }
     }
     loadData();
-  }, []);
+  }, [dataVersion]);
 
   if (isLoading) {
     return (

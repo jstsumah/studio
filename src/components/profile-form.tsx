@@ -5,7 +5,6 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +25,7 @@ import { LoaderCircle } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { clearCache } from '@/lib/data';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -39,7 +39,7 @@ type ProfileFormValues = z.infer<typeof formSchema>;
 export function ProfileForm({ user, onFinished, departments }: { user: Employee, onFinished: () => void, departments: string[] }) {
   const { toast } = useToast();
   const { updateUser } = useAuth();
-  const router = useRouter();
+  const { refreshData } = useDataRefresh();
   const [newAvatarUrl, setNewAvatarUrl] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -96,7 +96,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
     try {
       await updateUser(updateData);
       clearCache();
-      router.refresh();
+      refreshData();
       onFinished();
     } catch (error) {
         toast({

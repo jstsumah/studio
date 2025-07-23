@@ -7,10 +7,12 @@ import { EmployeeTableClient } from '@/components/employee-table-client';
 import type { Employee } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { dataVersion } = useDataRefresh();
   
   React.useEffect(() => {
     async function loadData() {
@@ -25,7 +27,7 @@ export default function EmployeesPage() {
         }
     }
     loadData();
-  }, [])
+  }, [dataVersion])
 
   if (isLoading) {
     return (

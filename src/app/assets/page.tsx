@@ -7,12 +7,14 @@ import { AssetTableClient } from '@/components/asset-table-client';
 import type { Asset, Company, Employee } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 export default function AssetsPage() {
   const [assets, setAssets] = React.useState<Asset[]>([]);
   const [employees, setEmployees] = React.useState<Employee[]>([]);
   const [companies, setCompanies] = React.useState<Company[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const { dataVersion } = useDataRefresh();
 
   React.useEffect(() => {
     async function loadData() {
@@ -33,7 +35,7 @@ export default function AssetsPage() {
       }
     }
     loadData();
-  }, []);
+  }, [dataVersion]);
 
   if (isLoading) {
     return (

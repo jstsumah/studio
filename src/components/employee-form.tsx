@@ -3,7 +3,6 @@ import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import type { Employee } from "@/lib/types"
 import { updateEmployee, clearCache, createEmployee } from "@/lib/data"
 import { LoaderCircle } from "lucide-react"
+import { useDataRefresh } from "@/hooks/use-data-refresh"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -30,7 +30,7 @@ const formSchema = z.object({
 
 export function EmployeeForm({ onFinished, departments, employee }: { onFinished: () => void, departments: string[], employee?: Employee }) {
   const { toast } = useToast()
-  const router = useRouter()
+  const { refreshData } = useDataRefresh();
   const [isSaving, setIsSaving] = React.useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,7 +62,7 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
         });
       }
       clearCache();
-      router.refresh(); 
+      refreshData();
       onFinished();
     } catch (error) {
        toast({
