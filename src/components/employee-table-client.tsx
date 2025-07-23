@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   CheckCircle,
   Clock,
+  UserX,
 } from "lucide-react";
 
 import type {
@@ -83,7 +84,8 @@ export function EmployeeTableClient({
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
+  const [isDeactivateAlertOpen, setIsDeactivateAlertOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | undefined>(undefined);
   const { toast } = useToast();
 
@@ -97,13 +99,19 @@ export function EmployeeTableClient({
     setSelectedEmployee(undefined);
   }
 
-  const openAlert = (employee: Employee) => {
+  const openDeleteAlert = (employee: Employee) => {
     setSelectedEmployee(employee);
-    setIsAlertOpen(true);
+    setIsDeleteAlertOpen(true);
   }
 
-  const closeAlert = () => {
-    setIsAlertOpen(false);
+  const openDeactivateAlert = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsDeactivateAlertOpen(true);
+  }
+
+  const closeAlerts = () => {
+    setIsDeleteAlertOpen(false);
+    setIsDeactivateAlertOpen(false);
     setSelectedEmployee(undefined);
   }
 
@@ -125,6 +133,28 @@ export function EmployeeTableClient({
     }
   }
 
+  const handleDeactivate = async () => {
+    if (!selectedEmployee) return;
+    try {
+      await updateEmployee(selectedEmployee.id, { active: false });
+      toast({
+        title: "User Deactivated",
+        description: `${selectedEmployee.name} can no longer log in.`,
+      });
+      clearCache();
+      refreshData();
+    } catch (error) {
+       toast({
+        title: "Deactivation Failed",
+        description: "Could not deactivate the user. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      closeAlerts();
+    }
+  }
+
+
   const handleDelete = () => {
     if (selectedEmployee) {
       // In a real app, you would make an API call here.
@@ -134,7 +164,7 @@ export function EmployeeTableClient({
         description: `Successfully deleted ${selectedEmployee.name}.`,
         variant: "destructive"
       });
-      closeAlert();
+      closeAlerts();
     }
   }
 
@@ -234,13 +264,19 @@ export function EmployeeTableClient({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {!employee.active && (
+              <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
+              {!employee.active ? (
                 <DropdownMenuItem onClick={() => handleActivate(employee)}>
                   <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
                   Activate User
                 </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem className="text-destructive" onClick={() => openDeactivateAlert(employee)}>
+                    <UserX className="mr-2 h-4 w-4" />
+                    Deactivate User
+                </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(employee.id);
@@ -252,8 +288,7 @@ export function EmployeeTableClient({
               >
                 Copy Employee ID
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={() => openAlert(employee)}>Delete Employee</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => openDeleteAlert(employee)}>Delete Employee</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -443,7 +478,7 @@ export function EmployeeTableClient({
             <EmployeeForm onFinished={closeForm} departments={departments} employee={selectedEmployee} />
         </DialogContent>
        </Dialog>
-        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -452,8 +487,22 @@ export function EmployeeTableClient({
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                <AlertDialogCancel onClick={closeAlert}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={closeAlerts}>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+        <AlertDialog open={isDeactivateAlertOpen} onOpenChange={setIsDeactivateAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure you want to deactivate this user?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This will prevent {selectedEmployee?.name} from accessing the application. You can reactivate them later.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel onClick={closeAlerts}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeactivate} className="bg-destructive hover:bg-destructive/90">Deactivate</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
