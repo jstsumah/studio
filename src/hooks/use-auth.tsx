@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, User as FirebaseUser, FirebaseError } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from '@/lib/firebase';
@@ -78,7 +78,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [pathname, user, toast]);
 
   const login = async (email: string, pass: string) => {
-    await signInWithEmailAndPassword(auth, email, pass);
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+    } catch (error) {
+        // Re-throw the error so the form can catch it and display a message
+        throw error;
+    }
   };
 
   const signup = async (name: string, email: string, pass: string) => {
