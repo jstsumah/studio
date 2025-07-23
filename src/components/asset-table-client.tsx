@@ -14,6 +14,7 @@ import {
   PlusCircle,
   Download,
   Building,
+  HelpCircle,
 } from 'lucide-react';
 import Papa from 'papaparse';
 
@@ -83,6 +84,9 @@ const statusConfig: Record<
   Decommissioned: { label: 'Decommissioned', icon: Circle, color: 'text-gray-500' },
 };
 
+const defaultStatusConfig = { label: 'Unknown', icon: HelpCircle, color: 'text-muted-foreground' };
+
+
 const categoryIcons: Record<AssetCategory, React.ReactNode> = {
   Laptop: <Laptop className="h-4 w-4" />,
   Desktop: <HardDrive className="h-4 w-4" />,
@@ -141,7 +145,7 @@ export function AssetTableClient({
       const category = row.getValue('category') as AssetCategory;
       return (
         <div className="flex items-center gap-2">
-          {categoryIcons[category]}
+          {categoryIcons[category] || categoryIcons['Other']}
           <span>{category}</span>
         </div>
       );
@@ -184,7 +188,7 @@ export function AssetTableClient({
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as AssetStatus;
-      const config = statusConfig[status];
+      const config = statusConfig[status] || defaultStatusConfig;
       return (
         <Badge variant="outline" className="flex items-center gap-2">
           <config.icon className={`h-2.5 w-2.5 ${config.color} fill-current`} />
