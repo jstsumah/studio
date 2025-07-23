@@ -12,11 +12,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDataRefresh } from '@/hooks/use-data-refresh';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ProfileForm } from '@/components/profile-form';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
   const { dataVersion } = useDataRefresh();
 
   React.useEffect(() => {
@@ -41,8 +45,12 @@ export default function ProfilePage() {
 
   const assignedAssets = React.useMemo(() => {
     if (!user) return [];
+    // If the user is an admin, they see all assets. Otherwise, only their own.
+    if (isAdmin) return allAssets;
     return allAssets.filter(asset => asset.assignedTo === user.id);
-  }, [user, allAssets]);
+  }, [user, allAssets, isAdmin]);
+
+  const closeForm = () => setIsFormOpen(false);
   
   if (isLoading || !user) {
     return (
@@ -60,6 +68,7 @@ export default function ProfilePage() {
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   return (
+    <>
     <div className="flex-1 space-y-4 p-4 md:p-8">
       <div className="flex items-center justify-between space-y-2">
         <h1 className="text-3xl font-bold tracking-tight font-headline">
@@ -92,9 +101,9 @@ export default function ProfilePage() {
             </div>
              <div>
                 <p className="text-sm font-medium text-muted-foreground">Role</p>
-                <p className="text-sm">
+                <div className="text-sm">
                     <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge>
-                </p>
+                </div>
             </div>
           </CardContent>
         </Card>
@@ -132,5 +141,22 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
+    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent
+            onInteractOutside={(e) => e.preventDefault()}
+            onCloseAutoFocus={closeForm}
+        >
+            <DialogHeader>
+                <DialogTitle>Edit Your Profile</DialogTitle>
+                <DialogDescription>
+                    Update your personal information.
+                </DialogDescription>
+            </DialogHeader>
+            {/* The form will need the current user and a list of departments */}
+            {/* This assumes getEmployees can be used to derive departments, or you have another source */}
+            {/* <ProfileForm onFinished={closeForm} user={user} departments={[]} /> */}
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
