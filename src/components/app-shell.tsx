@@ -12,6 +12,7 @@ import {
   Search,
   LogOut,
   User as UserIcon,
+  ShieldCheck,
 } from 'lucide-react';
 
 import {
@@ -42,7 +43,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 
-const navItems = [
+const adminNavItems = [
   { href: '/', icon: Home, label: 'Dashboard' },
   { href: '/assets', icon: Briefcase, label: 'Assets' },
   { href: '/employees', icon: Users, label: 'Employees' },
@@ -50,9 +51,17 @@ const navItems = [
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
+const employeeNavItems = [
+    { href: '/', icon: Home, label: 'Dashboard' },
+    { href: '/profile', icon: UserIcon, label: 'My Profile & Assets' },
+];
+
 function MainSidebar() {
   const pathname = usePathname();
   const { open } = useSidebar();
+  const { isAdmin } = useAuth();
+  
+  const navItems = isAdmin ? adminNavItems : employeeNavItems;
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -92,7 +101,7 @@ function MainSidebar() {
 }
 
 function Header() {
-  const { logout, user } = useAuth();
+  const { logout, user, isAdmin } = useAuth();
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   return (
@@ -106,6 +115,7 @@ function Header() {
               type="search"
               placeholder="Search assets..."
               className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
+              disabled={!isAdmin}
             />
           </div>
         </form>
@@ -121,7 +131,10 @@ function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel className="flex items-center gap-2">
+            <span>My Account</span>
+            {isAdmin && <ShieldCheck className="h-4 w-4 text-primary" />}
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
            <DropdownMenuItem asChild>
             <Link href="/profile">
@@ -129,13 +142,14 @@ function Header() {
               <span>My Profile</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/settings">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem>Support</DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => logout()}>
             <LogOut className="mr-2 h-4 w-4" />

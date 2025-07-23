@@ -29,6 +29,7 @@ export type Employee = {
   jobTitle: string;
   email: string;
   avatarUrl: string;
+  role: 'Admin' | 'Employee';
 };
 
 export type Assignment = {

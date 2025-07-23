@@ -26,6 +26,7 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   department: z.string().min(1, "Department is required"),
   jobTitle: z.string().min(1, "Job title is required"),
+  role: z.enum(["Admin", "Employee"]),
 })
 
 export function EmployeeForm({ onFinished, departments, employee }: { onFinished: () => void, departments: string[], employee?: Employee }) {
@@ -40,6 +41,7 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
       email: employee?.email ?? "",
       department: employee?.department ?? "",
       jobTitle: employee?.jobTitle ?? "",
+      role: employee?.role ?? "Employee",
     },
   })
 
@@ -141,6 +143,27 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
             )}
             />
         </div>
+         <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Employee">Employee</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+            )}
+            />
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
             <Button type="submit" disabled={isSaving}>

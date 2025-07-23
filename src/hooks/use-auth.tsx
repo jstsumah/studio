@@ -18,6 +18,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => Promise<void>;
   isLoading: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,17 +31,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const { toast } = useToast();
 
+  const isAdmin = user?.role === 'Admin';
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
+        // If user is already loaded, no need to fetch again.
         if (fbUser.uid === user?.id) {
           setIsLoading(false);
           return;
         }
-
+        
         const userDocRef = doc(db, 'employees', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
         setFirebaseUser(fbUser);
+        
         if (userDoc.exists()) {
           setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
         } else {
@@ -73,6 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         department: 'Unassigned',
         jobTitle: 'New Employee',
         avatarUrl: '',
+        role: 'Employee', // New users are always 'Employee'
       };
       
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
@@ -94,7 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const updateData = { ...data };
 
         if (newAvatarUrl) {
-            // If the new avatar is a data URL from Genkit, we need to upload it to storage first.
             if (newAvatarUrl.startsWith('data:')) {
                 const storageRef = ref(storage, `avatars/${user.id}`);
                 try {
@@ -108,10 +113,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         description: 'Could not upload your new profile picture. Please try again.',
                         variant: 'destructive',
                     });
-                    return; // Stop if upload fails
+                    return; 
                 }
             } else {
-                 // It's already a URL
                 updateData.avatarUrl = newAvatarUrl;
             }
         }
@@ -132,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, login, signup, logout, updateUser, isLoading }}>
+    <AuthContext.Provider value={{ user, firebaseUser, login, signup, logout, updateUser, isLoading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

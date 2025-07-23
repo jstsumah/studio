@@ -7,6 +7,7 @@ import {
   ChevronDown,
   MoreHorizontal,
   PlusCircle,
+  ShieldCheck,
 } from "lucide-react";
 
 import type {
@@ -63,6 +64,7 @@ import {
 import { EmployeeForm } from "./employee-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "./ui/badge";
 
 export function EmployeeTableClient({
   employees,
@@ -147,7 +149,10 @@ export function EmployeeTableClient({
               <AvatarImage src={employee.avatarUrl || undefined} alt={employee.name} />
               <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
             </Avatar>
-            <span className="font-medium">{employee.name}</span>
+            <div className="flex flex-col">
+              <span className="font-medium">{employee.name}</span>
+               {employee.role === 'Admin' && <Badge variant="secondary" className="w-fit"><ShieldCheck className="mr-1 h-3 w-3 text-primary" /> Admin</Badge>}
+            </div>
           </div>
         );
       },

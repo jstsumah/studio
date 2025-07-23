@@ -3,24 +3,19 @@
 
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { getAssets, getEmployees } from '@/lib/data';
+import { getAssets } from '@/lib/data';
 import type { Asset, Employee } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ProfileForm } from '@/components/profile-form';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDataRefresh } from '@/hooks/use-data-refresh';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
-  const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const { dataVersion } = useDataRefresh();
 
@@ -33,12 +28,8 @@ export default function ProfilePage() {
       
       setIsLoading(true);
       try {
-        const [assetsData, employeesData] = await Promise.all([
-          getAssets(),
-          getEmployees(),
-        ]);
+        const assetsData = await getAssets();
         setAllAssets(assetsData);
-        setAllEmployees(employeesData);
       } catch (error) {
         console.error("Failed to load profile page data:", error)
       } finally {
@@ -48,17 +39,10 @@ export default function ProfilePage() {
     loadData();
   }, [user, dataVersion]);
 
-  // Memoize assets to prevent re-filtering on every render
   const assignedAssets = React.useMemo(() => {
     if (!user) return [];
     return allAssets.filter(asset => asset.assignedTo === user.id);
   }, [user, allAssets]);
-
-  const departments = React.useMemo(() => {
-    const existingDepartments = allEmployees.map((e) => e.department).filter(Boolean) as string[];
-    const additionalDepartments = ["Procurement", "IT", "Camp Manager", "Chef"];
-    return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
-  }, [allEmployees]);
   
   if (isLoading || !user) {
     return (
@@ -81,20 +65,6 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">
           My Profile
         </h1>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-                <Button>Edit Profile</Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Edit Your Profile</DialogTitle>
-                    <DialogDescription>
-                        Update your personal information here. Click save when you're done.
-                    </DialogDescription>
-                </DialogHeader>
-                <ProfileForm user={user} onFinished={() => setIsFormOpen(false)} departments={departments} />
-            </DialogContent>
-        </Dialog>
       </div>
       <Separator />
       <div className="grid gap-6 lg:grid-cols-3">
@@ -119,6 +89,12 @@ export default function ProfilePage() {
             <div>
                 <p className="text-sm font-medium text-muted-foreground">Department</p>
                 <p className="text-sm">{user.department}</p>
+            </div>
+             <div>
+                <p className="text-sm font-medium text-muted-foreground">Role</p>
+                <p className="text-sm">
+                    <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>{user.role}</Badge>
+                </p>
             </div>
           </CardContent>
         </Card>

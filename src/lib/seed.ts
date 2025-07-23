@@ -10,36 +10,42 @@ const companies: Company[] = [
   { id: 'stark-industries', name: 'Stark Industries' },
 ];
 
-const employees: Employee[] = [
+const employees: Omit<Employee, 'id'>[] = [
   {
-    id: 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2', // UID for jane.doe@example.com
     name: 'Jane Doe',
     department: 'IT',
     jobTitle: 'Asset Manager',
     email: 'jane.doe@example.com',
-    avatarUrl: 'https://placehold.co/256x256.png',
+    avatarUrl: '',
+    role: 'Admin',
   },
   {
-    id: 'mB8vY4zP9tX3rW1oI7uE5sA2gC3', // UID for john.smith@example.com
     name: 'John Smith',
     department: 'Engineering',
     jobTitle: 'Software Engineer',
     email: 'john.smith@example.com',
-    avatarUrl: 'https://placehold.co/256x256.png',
+    avatarUrl: '',
+    role: 'Employee',
   },
    {
-    id: 'aC1bE2dF3gH4iJ5kL6mN7oP8qR9', // UID for sam.jones@example.com
     name: 'Sam Jones',
     department: 'Operations',
     jobTitle: 'Facilities Coordinator',
     email: 'sam.jones@example.com',
-    avatarUrl: 'https://placehold.co/256x256.png',
+    avatarUrl: '',
+    role: 'Employee',
   },
 ];
 
-const assets: Asset[] = [
+const employeeIdMap: Record<string, string> = {
+    'jane.doe@example.com': 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2',
+    'john.smith@example.com': 'mB8vY4zP9tX3rW1oI7uE5sA2gC3',
+    'sam.jones@example.com': 'aC1bE2dF3gH4iJ5kL6mN7oP8qR9',
+}
+
+
+const assets: Omit<Asset, 'id'>[] = [
   {
-    id: 'asset-1',
     serialNumber: 'SN-LAP-001',
     category: 'Laptop',
     brand: 'Dell',
@@ -54,7 +60,6 @@ const assets: Asset[] = [
     ]
   },
   {
-    id: 'asset-2',
     serialNumber: 'SN-MON-002',
     category: 'Other',
     brand: 'LG',
@@ -66,7 +71,6 @@ const assets: Asset[] = [
     history: []
   },
    {
-    id: 'asset-3',
     serialNumber: 'SN-PHN-003',
     category: 'Phone',
     brand: 'Apple',
@@ -81,7 +85,6 @@ const assets: Asset[] = [
     ]
   },
   {
-    id: 'asset-4',
     serialNumber: 'SN-DESK-004',
     category: 'Desktop',
     brand: 'HP',
@@ -93,7 +96,6 @@ const assets: Asset[] = [
     history: []
   },
    {
-    id: 'asset-5',
     serialNumber: 'SN-TAB-005',
     category: 'Tablet',
     brand: 'Samsung',
@@ -123,19 +125,22 @@ async function seedDatabase() {
   console.log('Preparing employees...');
   const employeesCollection = collection(db, 'employees');
   employees.forEach(employee => {
-    const docRef = doc(employeesCollection, employee.id);
-    const { id, ...employeeData } = employee;
-    batch.set(docRef, employeeData);
+    const employeeId = employeeIdMap[employee.email];
+    if (employeeId) {
+        const docRef = doc(employeesCollection, employeeId);
+        batch.set(docRef, employee);
+    }
   });
   console.log(`${employees.length} employees prepared.`);
 
   // Seed Assets
   console.log('Preparing assets...');
   const assetsCollection = collection(db, 'assets');
+  let i = 1;
   assets.forEach(asset => {
-    const docRef = doc(assetsCollection, asset.id);
-    const { id, ...assetData } = asset;
-    batch.set(docRef, assetData);
+    const assetId = `asset-${i++}`;
+    const docRef = doc(assetsCollection, assetId);
+    batch.set(docRef, asset);
   });
   console.log(`${assets.length} assets prepared.`);
 
@@ -146,7 +151,7 @@ async function seedDatabase() {
     console.log('\n================ IMPORTANT ================');
     console.log('To log in, you must first create users in Firebase Authentication.');
     console.log('Please go to your Firebase project console and create users with the following emails:');
-    console.log('\n- jane.doe@example.com');
+    console.log('\n- jane.doe@example.com (This user will be an ADMIN)');
     console.log('- john.smith@example.com');
     console.log('- sam.jones@example.com');
     console.log('\nUse any password you like (e.g., "password").');
