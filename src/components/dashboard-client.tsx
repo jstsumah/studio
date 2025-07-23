@@ -249,7 +249,7 @@ export function DashboardClient({
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <Avatar className="hidden h-9 w-9 sm:flex">
-                                        <AvatarImage src={employee?.avatarUrl} alt={employee?.name} />
+                                        <AvatarImage src={employee?.avatarUrl || undefined} alt={employee?.name} />
                                         <AvatarFallback>{employee?.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="grid gap-1">

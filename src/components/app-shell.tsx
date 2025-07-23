@@ -114,7 +114,7 @@ function Header() {
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user?.avatarUrl} alt={user?.name ?? 'User'} />
+              <AvatarImage src={user?.avatarUrl || undefined} alt={user?.name ?? 'User'} />
               <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
             <span className="sr-only">Toggle user menu</span>

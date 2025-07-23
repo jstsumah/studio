@@ -144,7 +144,7 @@ export function EmployeeTableClient({
         return (
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+              <AvatarImage src={employee.avatarUrl || undefined} alt={employee.name} />
               <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="font-medium">{employee.name}</span>
