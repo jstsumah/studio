@@ -1,10 +1,11 @@
+
 "use client"
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, LoaderCircle } from "lucide-react"
 import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
@@ -34,6 +35,8 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { useToast } from "@/hooks/use-toast"
 import type { Company } from "@/lib/types"
+import { addAsset, clearCache } from "@/lib/data"
+import { useDataRefresh } from "@/hooks/use-data-refresh"
 
 const formSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
@@ -46,9 +49,14 @@ const formSchema = z.object({
   }),
 })
 
+type RegisterAssetFormValues = z.infer<typeof formSchema>;
+
 export function RegisterAssetForm({ onFinished, companies }: { onFinished: () => void, companies: Company[] }) {
   const { toast } = useToast()
-  const form = useForm<z.infer<typeof formSchema>>({
+  const { refreshData } = useDataRefresh();
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const form = useForm<RegisterAssetFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       serialNumber: "",
@@ -57,14 +65,32 @@ export function RegisterAssetForm({ onFinished, companies }: { onFinished: () =>
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd call an API here.
-    console.log("New Asset Registered:", values)
-    toast({
-      title: "Asset Registered!",
-      description: `Serial Number: ${values.serialNumber}`,
-    })
-    onFinished()
+  async function onSubmit(values: RegisterAssetFormValues) {
+    setIsSaving(true);
+    const assetData = {
+      ...values,
+      purchaseDate: format(values.purchaseDate, 'yyyy-MM-dd'),
+    };
+
+    try {
+      await addAsset(assetData);
+      toast({
+        title: "Asset Registered!",
+        description: `Serial Number: ${values.serialNumber} has been added to the inventory.`,
+      });
+      clearCache();
+      refreshData();
+      onFinished();
+    } catch (error) {
+      console.error("Failed to register asset:", error);
+      toast({
+        title: "Registration Failed",
+        description: "Could not register the new asset. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -201,8 +227,11 @@ export function RegisterAssetForm({ onFinished, companies }: { onFinished: () =>
           )}
         />
         <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
-            <Button type="submit">Register Asset</Button>
+            <Button type="button" variant="outline" onClick={onFinished} disabled={isSaving}>Cancel</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
+              Register Asset
+            </Button>
         </div>
       </form>
     </Form>

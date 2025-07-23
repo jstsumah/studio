@@ -89,11 +89,20 @@ export const updateEmployee = async (employeeId: string, data: Partial<Omit<Empl
     clearCache(); // Invalidate cache after update
 }
 
-export const createEmployee = async (data: Omit<Employee, 'id'>) => {
-    // In a real app, you'd likely want to create the user in Firebase Auth first,
-    // then use that UID as the document ID here.
-    // For now, we'll just add a new document.
+export const createEmployee = async (data: Partial<Omit<Employee, 'id' | 'avatarUrl'>>) => {
     const employeesCollection = collection(db, 'employees');
     await addDoc(employeesCollection, { ...data, avatarUrl: '' }); // Add with empty avatar
+    clearCache();
+}
+
+export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | 'warrantyExpiry'>) => {
+    const assetsCollection = collection(db, 'assets');
+    const newAsset: Omit<Asset, 'id'> = {
+        ...data,
+        status: 'Available',
+        history: [],
+        warrantyExpiry: new Date(new Date(data.purchaseDate).setFullYear(new Date(data.purchaseDate).getFullYear() + 2)).toISOString().split('T')[0], // Set warranty 2 years from purchase
+    }
+    await addDoc(assetsCollection, newAsset);
     clearCache();
 }
