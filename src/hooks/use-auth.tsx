@@ -33,32 +33,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       setIsLoading(true);
-      setFirebaseUser(fbUser);
       if (fbUser) {
-        // User is logged in, fetch their document
+        setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'employees', fbUser.uid);
-        try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
-          } else {
-             // This can happen if a user is created in auth but not in firestore,
-             // especially during the signup race condition.
-             // The signup function now handles setting the user state manually.
-             // If we reach here, it implies a login attempt for a user without a DB record, 
-             // which is an inconsistent state.
-             if (pathname !== '/signup') {
-                console.error("User document not found for an existing auth user. Signing out.");
-                await signOut(auth);
-             }
-          }
-        } catch (error) {
-          console.error("Failed to fetch user document:", error);
-          await signOut(auth);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
+        } else {
+            // This case is now primarily for when a user is in auth but their DB doc
+            // was deleted, or for the small window during signup before the user state is manually set.
+            // We'll give a small grace period for signup to complete.
+            if (pathname !== '/signup') {
+               console.error("User document not found for an existing auth user. Signing out.");
+               await signOut(auth);
+               setUser(null);
+               setFirebaseUser(null);
+            }
         }
       } else {
         // User is logged out
         setUser(null);
+        setFirebaseUser(null);
       }
       setIsLoading(false);
     });
@@ -101,10 +96,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Create the user document in Firestore
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
       
-      // Manually set the user state to prevent the race condition
+      // Manually set the user and firebaseUser state to prevent the race condition
       setUser({ id: newUser.uid, ...newEmployeeData });
+      setFirebaseUser(newUser);
       
-      // The onAuthStateChanged listener will still run, but the user state will already be set.
+      // The onAuthStateChanged listener will still run, but the user state will already be set,
+      // and the app will redirect to the dashboard.
   }
 
   const logout = async () => {
