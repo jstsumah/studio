@@ -10,7 +10,6 @@ import type { Employee } from '@/lib/types';
 import { useToast } from './use-toast';
 
 interface AuthContextType {
-  isAuthenticated: boolean;
   user: Employee | null;
   firebaseUser: FirebaseUser | null;
   login: (email: string, pass: string) => Promise<void>;
@@ -32,65 +31,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setIsLoading(true);
       if (fbUser) {
-        // If the user is already in our state (e.g., from signup), we don't need to re-fetch
+        // This check is crucial on signup. The user state might already be set
+        // by the signup function. If so, we don't need to do anything.
         if (fbUser.uid === user?.id) {
           setIsLoading(false);
           return;
         }
 
-        setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'employees', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
-
+        setFirebaseUser(fbUser);
         if (userDoc.exists()) {
           setUser({ id: userDoc.id, ...userDoc.data() } as Employee);
         } else {
-            // This case handles when a user is in auth but their DB doc was deleted,
-            // or the small window during signup before the user state is manually set.
-            // The signup function now handles setting state, so this should primarily be a cleanup function
-            // for edge cases, like a deleted user document. We avoid logging out on the signup page
-            // to prevent the race condition from causing a logout loop.
-            if (pathname !== '/signup') {
-               console.warn("User document not found for an existing auth user. This might happen if the user document was deleted from Firestore. Signing out.");
+            // This case handles when a user is in auth but their DB doc was deleted.
+            // We should not be in here during a normal signup flow anymore.
+             if (pathname !== '/signup') {
+               console.warn("User document not found for an existing auth user. Signing out.");
                await signOut(auth);
-               // The listener will re-run with fbUser as null, correctly setting the state.
             }
         }
       } else {
-        // User is logged out
         setUser(null);
         setFirebaseUser(null);
       }
       setIsLoading(false);
     });
+
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-    // We add user to dependencies to re-evaluate when signup manually sets the user
-  }, [pathname, user]); 
-
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
-
-    if (user && isAuthPage) {
-      router.push('/');
-    }
-    
-    if (!user && !isAuthPage) {
-      router.push('/login');
-    }
-  }, [user, pathname, isLoading, router]);
-
+  }, [pathname, user]);
 
   const login = async (email: string, pass: string) => {
     await signInWithEmailAndPassword(auth, email, pass);
-    // onAuthStateChanged will handle the rest
+    // onAuthStateChanged will handle setting state and routing.
   };
 
-  const signup = async (name: string, email: string, pass:string) => {
+  const signup = async (name: string, email: string, pass: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
@@ -100,29 +78,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         department: 'Unassigned',
         jobTitle: 'New Employee',
         avatarUrl: '', // Start with an empty avatar URL
-      }
+      };
       
       // Create the user document in Firestore
       await setDoc(doc(db, 'employees', newUser.uid), newEmployeeData);
       
-      // Manually set the user and firebaseUser state to prevent the race condition.
+      // Manually set the user state to prevent race conditions.
       // This is the key to fixing the signup loop.
       setUser({ id: newUser.uid, ...newEmployeeData });
       setFirebaseUser(newUser);
-      
-      // The onAuthStateChanged listener will still run, but our check `fbUser.uid === user?.id`
-      // will now pass, preventing an unnecessary database read and potential race condition.
-      // The app will then redirect to the dashboard via the second useEffect.
+
+      // The app will now redirect to the dashboard.
+      router.push('/');
   }
 
   const logout = async () => {
-    setIsLoading(true);
     await signOut(auth);
-    // onAuthStateChanged will handle setting user state to null
+    // onAuthStateChanged will set user state to null
     router.push('/login');
-    // A small delay to ensure state updates before clearing loading,
-    // although onAuthStateChanged should handle this.
-    setTimeout(() => setIsLoading(false), 100);
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
@@ -143,18 +116,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const value = {
-    isAuthenticated: !!user,
-    user,
-    firebaseUser,
-    login,
-    signup,
-    logout,
-    updateUser,
-    isLoading,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, firebaseUser, login, signup, logout, updateUser, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

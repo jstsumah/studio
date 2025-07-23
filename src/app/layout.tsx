@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Inter, Space_Grotesk } from 'next/font/google';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
@@ -25,8 +25,29 @@ const fontSpaceGrotesk = Space_Grotesk({
 function AppContent({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const router = useRouter();
 
+  React.useEffect(() => {
+    if (isLoading) {
+      return; // Do nothing while loading.
+    }
+
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
+    
+    // If we have a user and they are on an auth page, redirect to home.
+    if (user && isAuthPage) {
+      router.push('/');
+    }
+    
+    // If we have no user and they are on a protected page, redirect to login.
+    if (!user && !isAuthPage) {
+      router.push('/login');
+    }
+
+  }, [user, isLoading, pathname, router]);
+
+
+  // While loading, show a global loading screen.
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -35,12 +56,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If we are on an auth page, render it. The useAuth hook will redirect if the user is already logged in.
-  if (isAuthPage) {
-    return <>{children}</>;
-  }
-  
-  // If we have a user and are not on an auth page, show the app shell.
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+  // If there's a user, show the app.
   if (user) {
     return (
         <>
@@ -50,12 +68,17 @@ function AppContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If no user and not on an auth page, the useAuth hook will redirect. Show a fallback message.
+  // If there's no user, but we are on an auth page, show the auth page.
+  if (!user && isAuthPage) {
+    return <>{children}</>;
+  }
+
+  // Fallback for edge cases, though the useEffect should handle redirection.
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="text-lg">Redirecting to login...</div>
-    </div>
-  );
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Redirecting...</div>
+      </div>
+    );
 }
 
 
