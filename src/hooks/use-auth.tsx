@@ -16,7 +16,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   signup: (name: string, email: string, pass: string) => Promise<void>;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id'>>, newAvatarDataUrl?: string | null) => Promise<void>;
+  updateUser: (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -88,25 +88,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
-  const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarDataUrl?: string | null) => {
+  const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => {
     if (user) {
         const userDocRef = doc(db, 'employees', user.id);
         const updateData = { ...data };
 
-        if (newAvatarDataUrl) {
-            const storageRef = ref(storage, `avatars/${user.id}`);
-            try {
-                await uploadString(storageRef, newAvatarDataUrl, 'data_url');
-                const downloadURL = await getDownloadURL(storageRef);
-                updateData.avatarUrl = downloadURL;
-            } catch (error) {
-                console.error("Error uploading avatar:", error);
-                toast({
-                    title: 'Avatar Upload Failed',
-                    description: 'Could not upload your new profile picture. Please try again.',
-                    variant: 'destructive',
-                });
-                return;
+        if (newAvatarUrl) {
+            // If the new avatar is a data URL from Genkit, we need to upload it to storage first.
+            if (newAvatarUrl.startsWith('data:')) {
+                const storageRef = ref(storage, `avatars/${user.id}`);
+                try {
+                    await uploadString(storageRef, newAvatarUrl, 'data_url');
+                    const downloadURL = await getDownloadURL(storageRef);
+                    updateData.avatarUrl = downloadURL;
+                } catch (error) {
+                    console.error("Error uploading avatar:", error);
+                    toast({
+                        title: 'Avatar Upload Failed',
+                        description: 'Could not upload your new profile picture. Please try again.',
+                        variant: 'destructive',
+                    });
+                    return; // Stop if upload fails
+                }
+            } else {
+                 // It's already a URL
+                updateData.avatarUrl = newAvatarUrl;
             }
         }
 
