@@ -112,7 +112,7 @@ export function DashboardClient({
       <div className="flex items-center justify-between space-y-2">
         <h1 className="text-3xl font-bold tracking-tight font-headline">Dashboard</h1>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
@@ -153,7 +153,7 @@ export function DashboardClient({
             <p className="text-xs text-muted-foreground">Undergoing maintenance</p>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Decommissioned</CardTitle>
             <XCircle className="h-4 w-4 text-muted-foreground" />
@@ -165,8 +165,8 @@ export function DashboardClient({
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4">
+      <div className="grid gap-4 lg:grid-cols-7">
+        <Card className="col-span-full lg:col-span-4">
           <CardHeader>
             <CardTitle className="font-headline">Assets by Category</CardTitle>
             <CardDescription>Distribution of asset types across the organization.</CardDescription>
@@ -203,7 +203,7 @@ export function DashboardClient({
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3">
+        <Card className="col-span-full lg:col-span-3">
           <CardHeader>
             <CardTitle className="font-headline">Assets by Status</CardTitle>
             <CardDescription>Current operational status of all assets.</CardDescription>
@@ -237,7 +237,7 @@ export function DashboardClient({
                     <TableRow>
                         <TableHead>Employee</TableHead>
                         <TableHead className="hidden sm:table-cell">Asset Serial</TableHead>
-                        <TableHead className="hidden sm:table-cell">Action</TableHead>
+                        <TableHead className="hidden md:table-cell">Action</TableHead>
                         <TableHead className="text-right">Date</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -259,7 +259,7 @@ export function DashboardClient({
                                 </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell font-mono">{activity.assetSerial}</TableCell>
-                            <TableCell className="hidden sm:table-cell">
+                            <TableCell className="hidden md:table-cell">
                                 <Badge variant={activity.action === 'Assigned' ? 'default' : 'secondary'}>{activity.action}</Badge>
                             </TableCell>
                             <TableCell className="text-right"><RecentActivityDate date={activity.date} /></TableCell>

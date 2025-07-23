@@ -144,7 +144,7 @@ export function EmployeeTableClient({
       cell: ({ row }) => {
         const employee = row.original;
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarImage src={employee.avatarUrl || undefined} alt={employee.name} />
               <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
@@ -160,6 +160,9 @@ export function EmployeeTableClient({
     {
       accessorKey: "email",
       header: "Email",
+      meta: {
+        className: 'hidden lg:table-cell',
+      }
     },
     {
       accessorKey: "department",
@@ -173,10 +176,16 @@ export function EmployeeTableClient({
         </Button>
       ),
       cell: ({ row }) => <div>{row.getValue("department")}</div>,
+      meta: {
+        className: 'hidden md:table-cell',
+      }
     },
     {
       accessorKey: "jobTitle",
       header: "Job Title",
+      meta: {
+        className: 'hidden lg:table-cell',
+      }
     },
     {
       id: "actions",
@@ -267,21 +276,21 @@ export function EmployeeTableClient({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between py-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
           <Input
             placeholder="Filter by name, email, department..."
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
+            className="w-full md:max-w-sm"
           />
-          <div className="flex items-center gap-2">
-            <Button onClick={() => openForm()}>
+          <div className="flex w-full md:w-auto items-center gap-2">
+            <Button className="w-full md:w-auto" onClick={() => openForm()}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Employee
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+                <Button variant="outline" className="ml-auto hidden md:flex">
                   Columns <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -314,7 +323,7 @@ export function EmployeeTableClient({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className={(header.column.columnDef.meta as any)?.className}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -335,7 +344,7 @@ export function EmployeeTableClient({
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className={(cell.column.columnDef.meta as any)?.className}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

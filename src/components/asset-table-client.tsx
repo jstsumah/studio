@@ -184,7 +184,7 @@ export function AssetTableClient({
     accessorKey: 'serialNumber',
     header: 'Serial Number',
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('serialNumber')}</div>
+      <div className="font-medium font-mono">{row.getValue('serialNumber')}</div>
     ),
   },
   {
@@ -230,6 +230,9 @@ export function AssetTableClient({
           <span>{company?.name ?? 'Unknown'}</span>
         </div>
       );
+    },
+    meta: {
+      className: 'hidden md:table-cell',
     }
   },
   {
@@ -264,7 +267,7 @@ export function AssetTableClient({
           </Avatar>
           <div>
             <div>{employee.name}</div>
-            <div className="text-sm text-muted-foreground">{employee.department}</div>
+            <div className="text-sm text-muted-foreground hidden lg:block">{employee.department}</div>
           </div>
         </div>
       );
@@ -289,6 +292,9 @@ export function AssetTableClient({
 
       return formattedDate;
     },
+    meta: {
+      className: 'hidden lg:table-cell',
+    }
   },
   {
     id: 'actions',
@@ -329,7 +335,10 @@ export function AssetTableClient({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+        'companyId': false,
+        'purchaseDate': false,
+    });
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
 
@@ -397,6 +406,21 @@ export function AssetTableClient({
     }
   }
 
+  React.useEffect(() => {
+    // Hide columns on mobile
+    if (window.innerWidth < 768) {
+      table.getColumn('companyId')?.toggleVisibility(false);
+      table.getColumn('purchaseDate')?.toggleVisibility(false);
+    } else if (window.innerWidth < 1024) {
+      table.getColumn('companyId')?.toggleVisibility(true);
+      table.getColumn('purchaseDate')?.toggleVisibility(false);
+    } else {
+       table.getColumn('companyId')?.toggleVisibility(true);
+       table.getColumn('purchaseDate')?.toggleVisibility(true);
+    }
+  }, [table]);
+
+
   return (
     <>
     <Card>
@@ -407,21 +431,21 @@ export function AssetTableClient({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-between py-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
           <Input
-            placeholder="Filter by serial, brand, model, company..."
+            placeholder="Filter by serial, brand, model..."
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
+            className="w-full md:max-w-sm"
           />
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={exportToCsv}>
+          <div className="flex w-full md:w-auto items-center gap-2">
+            <Button className="w-full md:w-auto" variant="outline" onClick={exportToCsv}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
             <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => setIsRegisterOpen(true)}>
+                <Button className="w-full md:w-auto" onClick={() => setIsRegisterOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Register Asset
                 </Button>
@@ -438,7 +462,7 @@ export function AssetTableClient({
             </Dialog>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+                <Button variant="outline" className="ml-auto hidden md:flex">
                   Columns <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -471,7 +495,7 @@ export function AssetTableClient({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className={(header.column.columnDef.meta as any)?.className}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -492,7 +516,7 @@ export function AssetTableClient({
                     data-state={row.getIsSelected() && 'selected'}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className={(cell.column.columnDef.meta as any)?.className}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -578,5 +602,3 @@ export function AssetTableClient({
     </>
   );
 }
-
-    

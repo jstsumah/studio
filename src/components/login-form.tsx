@@ -28,6 +28,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import { FirebaseError } from 'firebase/app';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -52,9 +53,22 @@ export function LoginForm() {
     try {
       await login(values.email, values.password);
     } catch (error: any) {
+      let description = 'An unknown error occurred. Please try again.';
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'auth/invalid-credential':
+          case 'auth/user-not-found':
+          case 'auth/wrong-password':
+            description = 'Invalid email or password. Please check your credentials.';
+            break;
+          default:
+            description = 'An authentication error occurred. Please try again later.';
+            break;
+        }
+      }
        toast({
         title: 'Login Failed',
-        description: error.message || 'Invalid email or password.',
+        description,
         variant: 'destructive'
       })
     } finally {
@@ -107,7 +121,7 @@ export function LoginForm() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <LoaderCircle className="animate-spin" />}
+              {isLoading && <LoaderCircle className="animate-spin mr-2" />}
               Sign In
             </Button>
             <div className="text-center text-sm">

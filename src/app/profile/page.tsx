@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { getAssets } from '@/lib/data';
+import { getAssets, getEmployees } from '@/lib/data';
 import type { Asset, Employee } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +19,7 @@ import { ProfileForm } from '@/components/profile-form';
 export default function ProfilePage() {
   const { user, isAdmin } = useAuth();
   const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
+  const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const { dataVersion } = useDataRefresh();
@@ -32,8 +33,12 @@ export default function ProfilePage() {
       
       setIsLoading(true);
       try {
-        const assetsData = await getAssets();
+        const [assetsData, employeesData] = await Promise.all([
+            getAssets(),
+            getEmployees()
+        ]);
         setAllAssets(assetsData);
+        setAllEmployees(employeesData);
       } catch (error) {
         console.error("Failed to load profile page data:", error)
       } finally {
@@ -51,6 +56,17 @@ export default function ProfilePage() {
   }, [user, allAssets, isAdmin]);
 
   const closeForm = () => setIsFormOpen(false);
+
+  const departments = React.useMemo(() => {
+    const existingDepartments = allEmployees.map((e) => e.department);
+    const additionalDepartments = [
+      "Procurement",
+      "IT",
+      "Camp Manager",
+      "Chef",
+    ];
+    return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
+  }, [allEmployees]);
   
   if (isLoading || !user) {
     return (
@@ -74,6 +90,23 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight font-headline">
           My Profile
         </h1>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+                <Button>Edit Profile</Button>
+            </DialogTrigger>
+            <DialogContent
+                onInteractOutside={(e) => e.preventDefault()}
+                onCloseAutoFocus={closeForm}
+            >
+                <DialogHeader>
+                    <DialogTitle>Edit Your Profile</DialogTitle>
+                    <DialogDescription>
+                        Update your personal information.
+                    </DialogDescription>
+                </DialogHeader>
+                <ProfileForm onFinished={closeForm} user={user} departments={departments} />
+            </DialogContent>
+        </Dialog>
       </div>
       <Separator />
       <div className="grid gap-6 lg:grid-cols-3">
@@ -114,26 +147,28 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             {assignedAssets.length > 0 ? (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Serial Number</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Model</TableHead>
-                            <TableHead>Status</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {assignedAssets.map(asset => (
-                            <TableRow key={asset.id}>
-                                <TableCell className="font-mono">{asset.serialNumber}</TableCell>
-                                <TableCell>{asset.category}</TableCell>
-                                <TableCell>{asset.brand} {asset.model}</TableCell>
-                                <TableCell><Badge variant="outline">{asset.status}</Badge></TableCell>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Serial Number</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead className="hidden md:table-cell">Model</TableHead>
+                                <TableHead className="text-right">Status</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {assignedAssets.map(asset => (
+                                <TableRow key={asset.id}>
+                                    <TableCell className="font-mono">{asset.serialNumber}</TableCell>
+                                    <TableCell>{asset.category}</TableCell>
+                                    <TableCell className="hidden md:table-cell">{asset.brand} {asset.model}</TableCell>
+                                    <TableCell className="text-right"><Badge variant="outline">{asset.status}</Badge></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
             ) : (
                 <p className="text-sm text-muted-foreground">You have no assets assigned to you.</p>
             )}
@@ -141,22 +176,7 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
-    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent
-            onInteractOutside={(e) => e.preventDefault()}
-            onCloseAutoFocus={closeForm}
-        >
-            <DialogHeader>
-                <DialogTitle>Edit Your Profile</DialogTitle>
-                <DialogDescription>
-                    Update your personal information.
-                </DialogDescription>
-            </DialogHeader>
-            {/* The form will need the current user and a list of departments */}
-            {/* This assumes getEmployees can be used to derive departments, or you have another source */}
-            {/* <ProfileForm onFinished={closeForm} user={user} departments={[]} /> */}
-        </DialogContent>
-    </Dialog>
+    
     </>
   );
 }
