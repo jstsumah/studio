@@ -557,7 +557,7 @@ export function AssetTableClient({
                 <DialogTitle>Assign Asset</DialogTitle>
                 <DialogDescription>Assign asset {selectedAsset?.serialNumber} to an employee.</DialogDescription>
             </DialogHeader>
-            <AssignAssetForm onFinished={closeDialogs} employees={employees} asset={selectedAsset!} />
+            {selectedAsset && <AssignAssetForm onFinished={closeDialogs} employees={employees} asset={selectedAsset} />}
         </DialogContent>
     </Dialog>
 
@@ -578,3 +578,5 @@ export function AssetTableClient({
     </>
   );
 }
+
+    
