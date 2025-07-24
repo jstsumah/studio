@@ -134,6 +134,7 @@ export default function SettingsPage() {
 
   return (
     <>
+    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
       <div className="flex-1 space-y-4 p-4 md:p-8">
         <div className="flex items-center justify-between space-y-2">
           <h1 className="text-3xl font-bold tracking-tight font-headline">
@@ -208,20 +209,19 @@ export default function SettingsPage() {
         </Card>
       </div>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent
-          onInteractOutside={(e) => e.preventDefault()}
-          onCloseAutoFocus={closeForm}
-        >
-          <DialogHeader>
-            <DialogTitle>{selectedCompany ? 'Edit Company' : 'Add New Company'}</DialogTitle>
-            <DialogDescription>
-              {selectedCompany ? `Update the name for ${selectedCompany.name}.` : 'Add a new company to the system.'}
-            </DialogDescription>
-          </DialogHeader>
-          <CompanyForm onFinished={closeForm} company={selectedCompany} />
-        </DialogContent>
-      </Dialog>
+      <DialogContent
+        onInteractOutside={(e) => e.preventDefault()}
+        onCloseAutoFocus={closeForm}
+      >
+        <DialogHeader>
+          <DialogTitle>{selectedCompany ? 'Edit Company' : 'Add New Company'}</DialogTitle>
+          <DialogDescription>
+            {selectedCompany ? `Update the name for ${selectedCompany.name}.` : 'Add a new company to the system.'}
+          </DialogDescription>
+        </DialogHeader>
+        <CompanyForm onFinished={closeForm} company={selectedCompany} />
+      </DialogContent>
+    </Dialog>
       
        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
             <AlertDialogContent>
