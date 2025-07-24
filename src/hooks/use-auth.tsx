@@ -136,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       await signOut(auth);
+      router.push('/login');
       return null;
     } catch (error) {
       if (isFirebaseError(error)) {

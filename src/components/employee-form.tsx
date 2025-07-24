@@ -51,13 +51,15 @@ export function EmployeeForm({ onFinished, departments, employee }: { onFinished
     setIsSaving(true);
     try {
       if (isEditing && employee) {
-        await updateEmployee(employee.id, values);
+        // We only pass the fields that are actually editable in this form.
+        // We don't want to allow changing the email here.
+        const { name, department, jobTitle, role } = values;
+        await updateEmployee(employee.id, { name, department, jobTitle, role });
         toast({
             title: "Employee Updated!",
             description: `Successfully updated ${values.name} in the system.`,
         });
       } else {
-        // This is where the fix is. We are now correctly calling createEmployee for new users.
         await createEmployee(values);
         toast({
             title: "Employee Added!",
