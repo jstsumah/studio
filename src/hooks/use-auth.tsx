@@ -93,14 +93,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return 'auth/user-not-found';
         }
 
-        const userData = userDoc.data() as Omit<Employee, 'id'>;
+        const userData = { id: userDoc.id, ...userDoc.data() } as Employee;
 
         if (!userData.active) {
             await signOut(auth);
             return 'auth/user-not-active';
         }
         
-        // If everything is fine, the onAuthStateChanged listener will handle setting the user state.
+        // If user is active, set the user state.
+        // The onAuthStateChanged listener will also fire but this ensures
+        // the UI updates immediately on login.
+        setUser(userData);
+        setFirebaseUser(fbUser);
         return null;
 
     } catch (error) {
