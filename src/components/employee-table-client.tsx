@@ -68,7 +68,7 @@ import { EmployeeForm } from "./employee-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "./ui/badge";
-import { clearCache, updateEmployee } from "@/lib/data";
+import { clearCache, updateEmployee, deleteEmployee } from "@/lib/data";
 import { useDataRefresh } from "@/hooks/use-data-refresh";
 
 export function EmployeeTableClient({
@@ -155,15 +155,22 @@ export function EmployeeTableClient({
   }
 
 
-  const handleDelete = () => {
-    if (selectedEmployee) {
-      // In a real app, you would make an API call here.
-      console.log("Deleting employee:", selectedEmployee.id);
+  const handleDelete = async () => {
+    if (!selectedEmployee) return;
+    try {
+      await deleteEmployee(selectedEmployee.id);
       toast({
         title: "Employee Deleted",
-        description: `Successfully deleted ${selectedEmployee.name}.`,
-        variant: "destructive"
+        description: `Successfully deleted ${selectedEmployee.name} from the database.`,
       });
+      refreshData();
+    } catch (error) {
+      toast({
+        title: "Deletion Failed",
+        description: "Could not delete the employee. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       closeAlerts();
     }
   }
@@ -509,5 +516,3 @@ export function EmployeeTableClient({
     </Card>
   );
 }
-
-    

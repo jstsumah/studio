@@ -1,6 +1,6 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, doc, getDocs, updateDoc, addDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, addDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from './firebase';
 
 // Caching layer to prevent re-fetching data on every navigation
@@ -99,6 +99,12 @@ export const createEmployee = async (data: Omit<Employee, 'id' | 'avatarUrl' | '
     await addDoc(employeesCollection, { ...data, avatarUrl: '', active: false });
     clearCache();
 }
+
+export const deleteEmployee = async (employeeId: string) => {
+    const employeeDocRef = doc(db, 'employees', employeeId);
+    await deleteDoc(employeeDocRef);
+    clearCache(); // Invalidate cache after deletion
+};
 
 export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | 'warrantyExpiry' | 'assignedTo'>) => {
     const assetsCollection = collection(db, 'assets');
