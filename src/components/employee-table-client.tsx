@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from 'next/navigation';
 import {
   ChevronsUpDown,
   ChevronDown,
@@ -9,8 +10,8 @@ import {
   PlusCircle,
   ShieldCheck,
   CheckCircle,
-  Clock,
   UserX,
+  Eye,
 } from "lucide-react";
 
 import type {
@@ -32,7 +33,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -68,26 +68,29 @@ import { EmployeeForm } from "./employee-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "./ui/badge";
-import { clearCache, updateEmployee } from "@/lib/data";
+import { clearCache, updateEmployee, deleteEmployee } from "@/lib/data";
 import { useDataRefresh } from "@/hooks/use-data-refresh";
+import { useAuth } from "@/hooks/use-auth";
 
 export function EmployeeTableClient({
   employees,
 }: {
   employees: Employee[];
 }) {
+  const router = useRouter();
   const { refreshData } = useDataRefresh();
+  const { user: currentUser } = useAuth();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
       email: false,
-      department: false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [isDeactivateAlertOpen, setIsDeactivateAlertOpen] = React.useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | undefined>(undefined);
   const { toast } = useToast();
 
@@ -100,6 +103,11 @@ export function EmployeeTableClient({
     setIsFormOpen(false);
     setSelectedEmployee(undefined);
   }
+  
+  const openDeleteAlert = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setIsDeleteAlertOpen(true);
+  }
 
   const openDeactivateAlert = (employee: Employee) => {
     setSelectedEmployee(employee);
@@ -108,6 +116,7 @@ export function EmployeeTableClient({
 
   const closeAlerts = () => {
     setIsDeactivateAlertOpen(false);
+    setIsDeleteAlertOpen(false);
     setSelectedEmployee(undefined);
   }
 
@@ -144,6 +153,26 @@ export function EmployeeTableClient({
         title: "Deactivation Failed",
         description: "Could not deactivate the user. Please try again.",
         variant: "destructive"
+      });
+    } finally {
+      closeAlerts();
+    }
+  }
+  
+  const handleDelete = async () => {
+    if (!selectedEmployee) return;
+    try {
+      await deleteEmployee(selectedEmployee.id);
+      toast({
+        title: 'Employee Deleted',
+        description: `${selectedEmployee.name} has been removed. You may need to delete them from Firebase Authentication manually.`
+      });
+      refreshData();
+    } catch (error) {
+       toast({
+        title: 'Deletion Failed',
+        description: 'Could not delete the employee. Please try again.',
+        variant: 'destructive'
       });
     } finally {
       closeAlerts();
@@ -226,7 +255,7 @@ export function EmployeeTableClient({
           </Badge>
         ) : (
           <Badge variant="secondary" className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-yellow-500" /> Pending
+            <UserX className="h-4 w-4 text-yellow-500" /> Inactive
           </Badge>
         );
       },
@@ -236,6 +265,8 @@ export function EmployeeTableClient({
       enableHiding: false,
       cell: ({ row }) => {
         const employee = row.original;
+        const isCurrentUser = currentUser?.id === employee.id;
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -246,7 +277,13 @@ export function EmployeeTableClient({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(`/employees/${employee.id}`)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openForm(employee)}>
+                Edit Employee
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               {!employee.active ? (
                 <DropdownMenuItem onClick={() => handleActivate(employee)}>
@@ -254,11 +291,15 @@ export function EmployeeTableClient({
                   Activate User
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem className="text-destructive" onClick={() => openDeactivateAlert(employee)}>
+                <DropdownMenuItem onClick={() => openDeactivateAlert(employee)} disabled={isCurrentUser}>
                     <UserX className="mr-2 h-4 w-4" />
                     Deactivate User
                 </DropdownMenuItem>
               )}
+              <DropdownMenuItem className="text-destructive" onClick={() => openDeleteAlert(employee)} disabled={isCurrentUser}>
+                  <UserX className="mr-2 h-4 w-4" />
+                  Delete User
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
@@ -471,6 +512,20 @@ export function EmployeeTableClient({
                 <AlertDialogFooter>
                 <AlertDialogCancel onClick={closeAlerts}>Cancel</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDeactivate} className="bg-destructive hover:bg-destructive/90">Deactivate</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the employee record for {selectedEmployee?.name}. You may also need to delete them from Firebase Authentication.
+                </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                <AlertDialogCancel onClick={closeAlerts}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

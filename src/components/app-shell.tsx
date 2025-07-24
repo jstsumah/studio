@@ -51,16 +51,16 @@ const adminNavItems = [
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
-const employeeNavItems = [
-    { href: '/', icon: Home, label: 'Dashboard' },
-    { href: '/profile', icon: UserIcon, label: 'My Profile & Assets' },
-];
-
 function MainSidebar() {
   const pathname = usePathname();
   const { open } = useSidebar();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   
+  const employeeNavItems = [
+      { href: '/', icon: Home, label: 'Dashboard' },
+      { href: `/employees/${user?.id}`, icon: UserIcon, label: 'My Profile & Assets' },
+  ];
+
   const navItems = isAdmin ? adminNavItems : employeeNavItems;
 
   return (
@@ -148,7 +148,7 @@ function Header() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
            <DropdownMenuItem asChild>
-            <Link href="/profile">
+            <Link href={`/employees/${user?.id}`}>
               <UserIcon className="mr-2 h-4 w-4" />
               <span>My Profile</span>
             </Link>
