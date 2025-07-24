@@ -10,6 +10,7 @@ export type Company = {
 export type Asset = {
   id: string;
   serialNumber: string;
+  tagNo: string;
   category: AssetCategory;
   brand: string;
   model: string;

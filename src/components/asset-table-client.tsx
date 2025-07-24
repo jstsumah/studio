@@ -183,6 +183,13 @@ export function AssetTableClient({
     enableHiding: false,
   },
   {
+    accessorKey: 'tagNo',
+    header: 'Tag No',
+    cell: ({ row }) => (
+      <div className="font-medium font-mono">{row.getValue('tagNo')}</div>
+    ),
+  },
+  {
     accessorKey: 'serialNumber',
     header: 'Serial Number',
     cell: ({ row }) => (
@@ -330,6 +337,7 @@ export function AssetTableClient({
     React.useState<VisibilityState>({
         'purchaseDate': false,
         'assetValue': false,
+        'serialNumber': false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState(searchParams.get('search') ?? '');
@@ -353,6 +361,7 @@ export function AssetTableClient({
 
         return (
           asset.serialNumber.toLowerCase().includes(searchTerm) ||
+          asset.tagNo.toLowerCase().includes(searchTerm) ||
           asset.brand.toLowerCase().includes(searchTerm) ||
           asset.model.toLowerCase().includes(searchTerm) ||
           (company?.name.toLowerCase().includes(searchTerm) ?? false)
@@ -373,6 +382,7 @@ export function AssetTableClient({
         const company = getCompanyById(asset.companyId);
         const assignedTo = asset.assignedTo ? getEmployeeById(asset.assignedTo)?.name : 'Unassigned';
         return {
+            'Tag No': asset.tagNo,
             'Serial Number': asset.serialNumber,
             'Category': asset.category,
             'Brand': asset.brand,
@@ -411,7 +421,7 @@ export function AssetTableClient({
       <CardContent>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
           <Input
-            placeholder="Filter by serial, brand, model..."
+            placeholder="Filter by tag, serial, brand..."
             value={globalFilter}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="w-full md:max-w-sm"

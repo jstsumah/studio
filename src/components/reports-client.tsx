@@ -44,6 +44,7 @@ export function ReportsClient({
 
   const generateFullInventory = async () => {
     const data = assets.map((asset) => ({
+      'Tag No': asset.tagNo,
       'Serial Number': asset.serialNumber,
       Category: asset.category,
       Brand: asset.brand,
@@ -62,6 +63,7 @@ export function ReportsClient({
   const generateAssetsByStatus = () => {
     const data = assets.map((asset) => ({
       Status: asset.status,
+      'Tag No': asset.tagNo,
       'Serial Number': asset.serialNumber,
       Category: asset.category,
       Brand: asset.brand,
@@ -80,6 +82,7 @@ export function ReportsClient({
             'Employee Name': employee.name,
             'Employee Email': employee.email,
             'Department': employee.department,
+            'Asset Tag No': 'N/A',
             'Asset Serial Number': 'N/A',
             'Asset Category': 'N/A',
             'Asset Brand': 'N/A',
@@ -90,6 +93,7 @@ export function ReportsClient({
         'Employee Name': employee.name,
         'Employee Email': employee.email,
         'Department': employee.department,
+        'Asset Tag No': asset.tagNo,
         'Asset Serial Number': asset.serialNumber,
         'Asset Category': asset.category,
         'Asset Brand': asset.brand,

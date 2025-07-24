@@ -40,6 +40,7 @@ import { useDataRefresh } from "@/hooks/use-data-refresh"
 
 const formSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
+  tagNo: z.string().min(1, "Tag number is required"),
   category: z.enum(["Laptop", "Desktop", "Phone", "Tablet", "Other"]),
   companyId: z.string().min(1, "Company is required"),
   brand: z.string().min(1, "Brand is required"),
@@ -63,6 +64,7 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
     resolver: zodResolver(formSchema),
     defaultValues: {
       serialNumber: asset?.serialNumber ?? "",
+      tagNo: asset?.tagNo ?? "",
       brand: asset?.brand ?? "",
       model: asset?.model ?? "",
       category: asset?.category ?? undefined,
@@ -111,19 +113,34 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="serialNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Serial Number</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. SN-LAP-005" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+            <FormField
+            control={form.control}
+            name="serialNumber"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Serial Number</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g. SN-LAP-005" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+            <FormField
+            control={form.control}
+            name="tagNo"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Tag No</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g. ASSET-001" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
         <div className="grid grid-cols-2 gap-4">
         <FormField
           control={form.control}
