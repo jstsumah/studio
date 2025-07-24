@@ -65,6 +65,10 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       "IT",
       "Camp Manager",
       "Chef",
+      "Accounts",
+      "Human Resource",
+      "Transport",
+      "Workshop",
     ];
     return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
   }, [allEmployees]);
