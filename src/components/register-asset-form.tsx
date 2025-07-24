@@ -267,5 +267,3 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
     </Form>
   )
 }
-
-    

@@ -85,11 +85,12 @@ const chartConfigStatus: ChartConfig = {
 };
 
 function RecentActivityDate({ date }: { date: string }) {
-    const [formattedDate, setFormattedDate] = React.useState('');
-    React.useEffect(() => {
-        setFormattedDate(format(new Date(date), 'MM/dd/yyyy'));
-    }, [date]);
-    return <>{formattedDate}</>;
+    if (!date) return null;
+    try {
+      return <>{format(new Date(date), 'MM/dd/yyyy')}</>;
+    } catch (e) {
+      return <>Invalid Date</>
+    }
 }
 
 export function DashboardClient({

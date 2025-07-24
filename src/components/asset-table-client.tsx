@@ -276,20 +276,13 @@ export function AssetTableClient({
     accessorKey: 'purchaseDate',
     header: 'Purchase Date',
     cell: ({ row }) => {
-      const [formattedDate, setFormattedDate] = React.useState('');
-      const date = row.getValue('purchaseDate');
-
-      React.useEffect(() => {
-        if (typeof date === 'string') {
-          try {
-            setFormattedDate(format(new Date(date), 'MM/dd/yyyy'));
-          } catch (e) {
-            setFormattedDate('Invalid Date');
-          }
-        }
-      }, [date]);
-
-      return formattedDate;
+      const date = row.getValue('purchaseDate') as string;
+      if (!date) return null;
+      try {
+        return format(new Date(date), 'MM/dd/yyyy');
+      } catch (e) {
+        return "Invalid Date";
+      }
     },
     meta: {
       className: 'hidden lg:table-cell',
