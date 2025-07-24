@@ -1,18 +1,20 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, doc, getDocs, updateDoc, addDoc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, addDoc, setDoc, deleteDoc, query, orderBy, limit, where, getDoc } from "firebase/firestore";
 import { db } from './firebase';
 
 // Caching layer to prevent re-fetching data on every navigation
 let companies: Company[] | null = null;
 let employees: Employee[] | null = null;
 let assets: Asset[] | null = null;
+let recentActivity: RecentActivity[] | null = null;
 
 // Function to clear the cache after data mutation
 export function clearCache() {
   companies = null;
   employees = null;
   assets = null;
+  recentActivity = null;
 }
 
 async function fetchCollection<T>(collectionName: string, cache: T[] | null, setCache: (data: T[]) => void): Promise<T[]> {
@@ -37,39 +39,17 @@ export const getEmployees = async (): Promise<Employee[]> => fetchCollection('em
 export const getAssets = async (): Promise<Asset[]> => fetchCollection('assets', assets, (data) => assets = data);
 
 
-async function fetchRecentActivity(): Promise<RecentActivity[]> {
-    // In a real app, this would be a query on a dedicated "activity" collection.
-    // For now, we'll generate it from asset history.
-    const allAssets = await getAssets();
-    const allEmployees = await getEmployees();
-    
-    const generatedActivity: RecentActivity[] = [];
-    allAssets.forEach(asset => {
-        // Ensure history exists and is an array
-        if (Array.isArray(asset.history)) {
-            asset.history.forEach(h => {
-                if (h.assignedTo && h.assignedTo !== 'Unassigned') {
-                    const employee = allEmployees.find(e => e.id === h.assignedTo);
-                    if (employee) {
-                        generatedActivity.push({
-                            assetId: asset.id,
-                            assetSerial: asset.serialNumber,
-                            employeeId: employee.id,
-                            employeeName: employee.name,
-                            date: h.date,
-                            action: h.status === 'In Use' ? 'Assigned' : 'Returned' // Simplified logic
-                        });
-                    }
-                }
-            })
-        }
-    });
-    
-    return generatedActivity.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,5);
-}
-
-
-export const getRecentActivity = async (): Promise<RecentActivity[]> => fetchRecentActivity();
+export const getRecentActivity = async (): Promise<RecentActivity[]> => {
+    if (recentActivity) {
+        return recentActivity;
+    }
+    const activityCollection = collection(db, 'activity');
+    const q = query(activityCollection, orderBy('date', 'desc'), limit(5));
+    const snapshot = await getDocs(q);
+    const activities = snapshot.docs.map(doc => doc.data() as RecentActivity);
+    recentActivity = activities;
+    return activities;
+};
 
 export const getCompanyById = async (id: string): Promise<Company | undefined> => {
     const allCompanies = await getCompanies();
@@ -93,9 +73,6 @@ export const updateEmployee = async (employeeId: string, data: Partial<Omit<Empl
 
 export const createEmployee = async (data: Omit<Employee, 'id' | 'avatarUrl' | 'active'>) => {
     const employeesCollection = collection(db, 'employees');
-    // When an admin adds an employee, it's a placeholder. It won't have an auth UID yet.
-    // We'll add it, but it will require manual creation in Firebase Auth console.
-    // We set them to inactive by default.
     await addDoc(employeesCollection, { ...data, avatarUrl: '', active: false });
     clearCache();
 }
@@ -103,7 +80,7 @@ export const createEmployee = async (data: Omit<Employee, 'id' | 'avatarUrl' | '
 export const deleteEmployee = async (employeeId: string) => {
     const employeeDocRef = doc(db, 'employees', employeeId);
     await deleteDoc(employeeDocRef);
-    clearCache(); // Invalidate cache after deletion
+    clearCache();
 };
 
 export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | 'warrantyExpiry' | 'assignedTo'>) => {
@@ -121,6 +98,46 @@ export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | '
 
 export const updateAsset = async (assetId: string, data: Partial<Omit<Asset, 'id'>>) => {
     const assetDocRef = doc(db, 'assets', assetId);
+    const originalAssetSnap = await getDoc(assetDocRef);
+    const originalAsset = originalAssetSnap.data() as Asset;
+    
     await updateDoc(assetDocRef, data);
+
+    // If an asset is assigned, log it to the activity collection
+    if (data.assignedTo && data.assignedTo !== originalAsset.assignedTo) {
+        const employee = await getEmployeeById(data.assignedTo);
+        const asset = await getAssetById(assetId);
+        
+        if (employee && asset) {
+            const activityLog: Omit<RecentActivity, 'id'> = {
+                assetId: assetId,
+                assetSerial: asset.serialNumber,
+                employeeId: employee.id,
+                employeeName: employee.name,
+                date: new Date().toISOString(),
+                action: 'Assigned'
+            };
+            await addDoc(collection(db, 'activity'), activityLog);
+        }
+    }
+
     clearCache(); // Invalidate cache after update
+}
+
+
+export const addCompany = async (data: Omit<Company, 'id'>) => {
+    await addDoc(collection(db, 'companies'), data);
+    clearCache();
+}
+
+export const updateCompany = async (companyId: string, data: Partial<Omit<Company, 'id'>>) => {
+    const companyDocRef = doc(db, 'companies', companyId);
+    await updateDoc(companyDocRef, data);
+    clearCache();
+}
+
+export const deleteCompany = async (companyId: string) => {
+    const companyDocRef = doc(db, 'companies', companyId);
+    await deleteDoc(companyDocRef);
+    clearCache();
 }

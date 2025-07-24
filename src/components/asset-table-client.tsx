@@ -17,6 +17,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import Papa from 'papaparse';
+import { useSearchParams } from 'next/navigation';
 
 import type {
   ColumnDef,
@@ -111,6 +112,7 @@ export function AssetTableClient({
 }) {
   const { refreshData } = useDataRefresh();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   
   const [selectedAsset, setSelectedAsset] = React.useState<Asset | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = React.useState(false);
@@ -337,7 +339,7 @@ export function AssetTableClient({
         'assetValue': false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [globalFilter, setGlobalFilter] = React.useState(searchParams.get('search') ?? '');
 
   const table = useReactTable({
     data: assets,
@@ -585,5 +587,3 @@ export function AssetTableClient({
     </>
   );
 }
-
-    

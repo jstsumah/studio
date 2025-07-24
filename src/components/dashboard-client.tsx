@@ -13,6 +13,7 @@ import {
   Tablet,
   Users,
   Wrench,
+  DollarSign,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -124,7 +125,7 @@ export function DashboardClient({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">KES {stats.value.toLocaleString()}</div>
@@ -248,7 +249,7 @@ export function DashboardClient({
                                 <div className="flex items-center gap-2">
                                     <Avatar className="hidden h-9 w-9 sm:flex">
                                         <AvatarImage src={employee?.avatarUrl || undefined} alt={employee?.name} />
-                                        <AvatarFallback>{employee?.name.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{employee?.name?.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="grid gap-1">
                                         <p className="text-sm font-medium leading-none">{employee?.name}</p>
@@ -271,5 +272,3 @@ export function DashboardClient({
     </div>
   );
 }
-
-    

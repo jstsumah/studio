@@ -42,6 +42,7 @@ export type Assignment = {
 };
 
 export type RecentActivity = {
+  id?: string;
   assetId: string;
   assetSerial: string;
   employeeId: string;
