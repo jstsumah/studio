@@ -1,6 +1,6 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, doc, getDocs, updateDoc, addDoc } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, addDoc, setDoc } from "firebase/firestore";
 import { db } from './firebase';
 
 // Caching layer to prevent re-fetching data on every navigation
@@ -91,9 +91,12 @@ export const updateEmployee = async (employeeId: string, data: Partial<Omit<Empl
     clearCache(); // Invalidate cache after update
 }
 
-export const createEmployee = async (data: Partial<Omit<Employee, 'id' | 'avatarUrl'>>) => {
+export const createEmployee = async (data: Omit<Employee, 'id' | 'avatarUrl' | 'active'>) => {
     const employeesCollection = collection(db, 'employees');
-    await addDoc(employeesCollection, { ...data, avatarUrl: '' }); // Add with empty avatar
+    // When an admin adds an employee, it's a placeholder. It won't have an auth UID yet.
+    // We'll add it, but it will require manual creation in Firebase Auth console.
+    // We set them to inactive by default.
+    await addDoc(employeesCollection, { ...data, avatarUrl: '', active: false });
     clearCache();
 }
 
