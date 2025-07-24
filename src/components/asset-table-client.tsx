@@ -334,6 +334,7 @@ export function AssetTableClient({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({
         'purchaseDate': false,
+        'assetValue': false,
     });
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
@@ -402,21 +403,6 @@ export function AssetTableClient({
       document.body.removeChild(link);
     }
   }
-
-  React.useEffect(() => {
-    // Hide columns on mobile
-    if (window.innerWidth < 768) {
-      table.getColumn('assetValue')?.toggleVisibility(false);
-      table.getColumn('purchaseDate')?.toggleVisibility(false);
-    } else if (window.innerWidth < 1024) {
-      table.getColumn('assetValue')?.toggleVisibility(true);
-      table.getColumn('purchaseDate')?.toggleVisibility(false);
-    } else {
-       table.getColumn('assetValue')?.toggleVisibility(true);
-       table.getColumn('purchaseDate')?.toggleVisibility(true);
-    }
-  }, [table]);
-
 
   return (
     <>
