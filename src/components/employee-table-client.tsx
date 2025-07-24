@@ -68,7 +68,7 @@ import { EmployeeForm } from "./employee-form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "./ui/badge";
-import { clearCache, updateEmployee, deleteEmployee } from "@/lib/data";
+import { clearCache, updateEmployee } from "@/lib/data";
 import { useDataRefresh } from "@/hooks/use-data-refresh";
 
 export function EmployeeTableClient({
@@ -80,11 +80,13 @@ export function EmployeeTableClient({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+    React.useState<VisibilityState>({
+      email: false,
+      department: false,
+    });
   const [rowSelection, setRowSelection] = React.useState({});
   const [globalFilter, setGlobalFilter] = React.useState('');
   const [isFormOpen, setIsFormOpen] = React.useState(false);
-  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
   const [isDeactivateAlertOpen, setIsDeactivateAlertOpen] = React.useState(false);
   const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | undefined>(undefined);
   const { toast } = useToast();
@@ -99,18 +101,12 @@ export function EmployeeTableClient({
     setSelectedEmployee(undefined);
   }
 
-  const openDeleteAlert = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setIsDeleteAlertOpen(true);
-  }
-
   const openDeactivateAlert = (employee: Employee) => {
     setSelectedEmployee(employee);
     setIsDeactivateAlertOpen(true);
   }
 
   const closeAlerts = () => {
-    setIsDeleteAlertOpen(false);
     setIsDeactivateAlertOpen(false);
     setSelectedEmployee(undefined);
   }
@@ -148,27 +144,6 @@ export function EmployeeTableClient({
         title: "Deactivation Failed",
         description: "Could not deactivate the user. Please try again.",
         variant: "destructive"
-      });
-    } finally {
-      closeAlerts();
-    }
-  }
-
-
-  const handleDelete = async () => {
-    if (!selectedEmployee) return;
-    try {
-      await deleteEmployee(selectedEmployee.id);
-      toast({
-        title: "Employee Deleted",
-        description: `Successfully deleted ${selectedEmployee.name} from the database.`,
-      });
-      refreshData();
-    } catch (error) {
-      toast({
-        title: "Deletion Failed",
-        description: "Could not delete the employee. Please try again.",
-        variant: "destructive",
       });
     } finally {
       closeAlerts();
@@ -272,6 +247,7 @@ export function EmployeeTableClient({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => openForm(employee)}>Edit Employee</DropdownMenuItem>
+              <DropdownMenuSeparator />
               {!employee.active ? (
                 <DropdownMenuItem onClick={() => handleActivate(employee)}>
                   <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
@@ -295,7 +271,6 @@ export function EmployeeTableClient({
               >
                 Copy Employee ID
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={() => openDeleteAlert(employee)}>Delete Employee</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -485,20 +460,6 @@ export function EmployeeTableClient({
             <EmployeeForm onFinished={closeForm} departments={departments} employee={selectedEmployee} />
         </DialogContent>
        </Dialog>
-        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the employee record for {selectedEmployee?.name}.
-                </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                <AlertDialogCancel onClick={closeAlerts}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
         <AlertDialog open={isDeactivateAlertOpen} onOpenChange={setIsDeactivateAlertOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>

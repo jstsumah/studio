@@ -77,12 +77,6 @@ export const createEmployee = async (data: Omit<Employee, 'id' | 'avatarUrl' | '
     clearCache();
 }
 
-export const deleteEmployee = async (employeeId: string) => {
-    const employeeDocRef = doc(db, 'employees', employeeId);
-    await deleteDoc(employeeDocRef);
-    clearCache();
-};
-
 export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | 'warrantyExpiry' | 'assignedTo'>) => {
     const assetsCollection = collection(db, 'assets');
     const newAsset: Omit<Asset, 'id'> = {
