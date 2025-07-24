@@ -3,179 +3,74 @@ import { collection, doc, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Company, Employee, Asset } from './types';
 
-// Sample Data
-const companies: Company[] = [
-  { id: 'acme-corp', name: 'Acme Corporation' },
-  { id: 'omni-consumer', name: 'Omni Consumer Products' },
-  { id: 'stark-industries', name: 'Stark Industries' },
-];
+// Sample Data has been removed for production use.
+// You can add new data directly through the application's UI.
+const companies: Company[] = [];
 
-const employees: Omit<Employee, 'id'>[] = [
-  {
-    name: 'Jane Doe',
-    department: 'IT',
-    jobTitle: 'Asset Manager',
-    email: 'jane.doe@example.com',
-    avatarUrl: '',
-    role: 'Admin',
-    active: true,
-  },
-  {
-    name: 'John Smith',
-    department: 'Engineering',
-    jobTitle: 'Software Engineer',
-    email: 'john.smith@example.com',
-    avatarUrl: '',
-    role: 'Employee',
-    active: true,
-  },
-   {
-    name: 'Sam Jones',
-    department: 'Operations',
-    jobTitle: 'Facilities Coordinator',
-    email: 'sam.jones@example.com',
-    avatarUrl: '',
-    role: 'Employee',
-    active: false,
-  },
-  {
-    name: 'Admin User',
-    department: 'Administration',
-    jobTitle: 'System Administrator',
-    email: 'digitalmarketing@sunworldsafaris.com',
-    avatarUrl: '',
-    role: 'Admin',
-    active: true,
-  }
-];
+const employees: Omit<Employee, 'id'>[] = [];
 
-const employeeIdMap: Record<string, string> = {
-    'jane.doe@example.com': 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2',
-    'john.smith@example.com': 'mB8vY4zP9tX3rW1oI7uE5sA2gC3',
-    'sam.jones@example.com': 'aC1bE2dF3gH4iJ5kL6mN7oP8qR9',
-    'digitalmarketing@sunworldsafaris.com': 'd1g1M4rk3tAdm1nS9nW0rldS4f4r1'
-}
+const employeeIdMap: Record<string, string> = {}
 
-
-const assets: Omit<Asset, 'id'>[] = [
-  {
-    serialNumber: 'SN-LAP-001',
-    category: 'Laptop',
-    brand: 'Dell',
-    model: 'XPS 15',
-    purchaseDate: '2023-01-15',
-    warrantyExpiry: '2026-01-14',
-    status: 'In Use',
-    assignedTo: 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2', // Jane Doe
-    companyId: 'acme-corp',
-    history: [
-      { date: '2023-01-20', assignedTo: 'Fk2sU1wQj6eX2nZ5kR3hA7jE8dC2', status: 'In Use', notes: 'Initial assignment' }
-    ],
-    assetValue: 2200,
-  },
-  {
-    serialNumber: 'SN-MON-002',
-    category: 'Other',
-    brand: 'LG',
-    model: 'UltraWide 34"',
-    purchaseDate: '2022-11-05',
-    warrantyExpiry: '2025-11-04',
-    status: 'Available',
-    companyId: 'acme-corp',
-    history: [],
-    assetValue: 800,
-  },
-   {
-    serialNumber: 'SN-PHN-003',
-    category: 'Phone',
-    brand: 'Apple',
-    model: 'iPhone 15 Pro',
-    purchaseDate: '2023-09-22',
-    warrantyExpiry: '2025-09-21',
-    status: 'In Use',
-    assignedTo: 'mB8vY4zP9tX3rW1oI7uE5sA2gC3', // John Smith
-    companyId: 'omni-consumer',
-    history: [
-       { date: '2023-09-25', assignedTo: 'mB8vY4zP9tX3rW1oI7uE5sA2gC3', status: 'In Use', notes: 'New phone for engineering team' }
-    ],
-    assetValue: 1199,
-  },
-  {
-    serialNumber: 'SN-DESK-004',
-    category: 'Desktop',
-    brand: 'HP',
-    model: 'Z2 Tower G9',
-    purchaseDate: '2023-05-10',
-    warrantyExpiry: '2026-05-09',
-    status: 'In Repair',
-    companyId: 'acme-corp',
-    history: [],
-    assetValue: 1850,
-  },
-   {
-    serialNumber: 'SN-TAB-005',
-    category: 'Tablet',
-    brand: 'Samsung',
-    model: 'Galaxy Tab S9',
-    purchaseDate: '2023-08-01',
-    warrantyExpiry: '2025-07-31',
-    status: 'Decommissioned',
-    companyId: 'stark-industries',
-    history: [],
-    assetValue: 950,
-  }
-];
+const assets: Omit<Asset, 'id'>[] = [];
 
 async function seedDatabase() {
+  console.log('Checking for seed data...');
+
+  if (companies.length === 0 && employees.length === 0 && assets.length === 0) {
+    console.log('\n✅ No seed data found. The application is ready for live data.');
+    console.log('You can now add companies, employees, and assets directly through the UI.');
+    console.log('To re-populate with sample data, you would need to restore the contents of this file.');
+    return;
+  }
+
   console.log('Starting to seed database...');
   const batch = writeBatch(db);
 
   // Seed Companies
-  console.log('Preparing companies...');
-  const companiesCollection = collection(db, 'companies');
-  companies.forEach(company => {
-    const docRef = doc(companiesCollection, company.id);
-    batch.set(docRef, { name: company.name });
-  });
-  console.log(`${companies.length} companies prepared.`);
+  if (companies.length > 0) {
+    console.log('Preparing companies...');
+    const companiesCollection = collection(db, 'companies');
+    companies.forEach(company => {
+      const docRef = doc(companiesCollection, company.id);
+      batch.set(docRef, { name: company.name });
+    });
+    console.log(`${companies.length} companies prepared.`);
+  }
+
 
   // Seed Employees
-  console.log('Preparing employees...');
-  const employeesCollection = collection(db, 'employees');
-  employees.forEach(employee => {
-    const employeeId = employeeIdMap[employee.email];
-    if (employeeId) {
-        const docRef = doc(employeesCollection, employeeId);
-        batch.set(docRef, employee);
-    }
-  });
-  console.log(`${employees.length} employees prepared.`);
+  if (employees.length > 0) {
+    console.log('Preparing employees...');
+    const employeesCollection = collection(db, 'employees');
+    employees.forEach(employee => {
+      const employeeId = employeeIdMap[employee.email];
+      if (employeeId) {
+          const docRef = doc(employeesCollection, employeeId);
+          batch.set(docRef, employee);
+      }
+    });
+    console.log(`${employees.length} employees prepared.`);
+  }
+
 
   // Seed Assets
-  console.log('Preparing assets...');
-  const assetsCollection = collection(db, 'assets');
-  let i = 1;
-  assets.forEach(asset => {
-    const assetId = `asset-${i++}`;
-    const docRef = doc(assetsCollection, assetId);
-    batch.set(docRef, asset);
-  });
-  console.log(`${assets.length} assets prepared.`);
+  if (assets.length > 0) {
+    console.log('Preparing assets...');
+    const assetsCollection = collection(db, 'assets');
+    let i = 1;
+    assets.forEach(asset => {
+      const assetId = `asset-${i++}`;
+      const docRef = doc(assetsCollection, assetId);
+      batch.set(docRef, asset);
+    });
+    console.log(`${assets.length} assets prepared.`);
+  }
+
 
   try {
     console.log('Committing batch write to Firestore...');
     await batch.commit();
     console.log('\n✅ Database seeded successfully!');
-    console.log('\n================ IMPORTANT ================');
-    console.log('To log in, you must first create users in Firebase Authentication.');
-    console.log('Please go to your Firebase project console and create users with the following emails:');
-    console.log('\n- digitalmarketing@sunworldsafaris.com (This user will be an ADMIN)');
-    console.log('- jane.doe@example.com (This user will be an ADMIN)');
-    console.log('- john.smith@example.com');
-    console.log('- sam.jones@example.com (This user is INACTIVE by default)');
-    console.log('\nUse any password you like (e.g., "password").');
-    console.log('The user IDs in the database have been pre-set to match the UIDs that will be generated by Firebase for these specific email addresses.');
-    console.log('===========================================\n');
   } catch (error) {
     console.error('❌ Error seeding database: ', error);
   }
