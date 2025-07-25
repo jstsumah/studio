@@ -191,6 +191,5 @@ function EmployeeProfile({ employeeId }: { employeeId: string }) {
 
 
 export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
-    const employeeId = params.id;
-    return <EmployeeProfile employeeId={employeeId} />;
+    return <EmployeeProfile employeeId={params.id} />;
 }
