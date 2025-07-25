@@ -16,8 +16,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ProfileForm } from '@/components/profile-form';
 
-export default function EmployeeProfilePage({ params: { id: employeeId } }: { params: { id: string } }) {
+export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
   const { user: currentUser } = useAuth();
+  const { id: employeeId } = params;
   const [employee, setEmployee] = React.useState<Employee | null>(null);
   const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
   const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
