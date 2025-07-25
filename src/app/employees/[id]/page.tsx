@@ -18,7 +18,7 @@ import { ProfileForm } from '@/components/profile-form';
 
 export default function EmployeeProfilePage({ params }: { params: { id: string } }) {
   const { user: currentUser } = useAuth();
-  const { id: employeeId } = params;
+  const employeeId = params.id;
   const [employee, setEmployee] = React.useState<Employee | null>(null);
   const [allAssets, setAllAssets] = React.useState<Asset[]>([]);
   const [allEmployees, setAllEmployees] = React.useState<Employee[]>([]);
