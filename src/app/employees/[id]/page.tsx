@@ -69,6 +69,7 @@ export default function EmployeeProfilePage({ params }: { params: { id: string }
       "Human Resource",
       "Transport",
       "Workshop",
+      "Reservations",
     ];
     return [...new Set([...existingDepartments, ...additionalDepartments])].sort();
   }, [allEmployees]);
