@@ -78,7 +78,7 @@ export function RegisterAssetForm({ onFinished, companies, asset, assets }: { on
     setIsSaving(true);
     
     // Check for duplicate tagNo
-    const tagConflict = assets.find(a => a.tagNo.toLowerCase() === values.tagNo.toLowerCase());
+    const tagConflict = assets.find(a => a.tagNo && a.tagNo.toLowerCase() === values.tagNo.toLowerCase());
     if (tagConflict && (!isEditing || tagConflict.id !== asset.id)) {
       toast({
         title: "Duplicate Tag Number",
