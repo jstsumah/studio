@@ -53,7 +53,7 @@ const formSchema = z.object({
 
 type RegisterAssetFormValues = z.infer<typeof formSchema>;
 
-export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished: () => void, companies: Company[], asset?: Asset | null }) {
+export function RegisterAssetForm({ onFinished, companies, asset, assets }: { onFinished: () => void, companies: Company[], asset?: Asset | null, assets: Asset[] }) {
   const { toast } = useToast()
   const { refreshData } = useDataRefresh();
   const [isSaving, setIsSaving] = React.useState(false);
@@ -76,6 +76,19 @@ export function RegisterAssetForm({ onFinished, companies, asset }: { onFinished
 
   async function onSubmit(values: RegisterAssetFormValues) {
     setIsSaving(true);
+    
+    // Check for duplicate tagNo
+    const tagConflict = assets.find(a => a.tagNo.toLowerCase() === values.tagNo.toLowerCase());
+    if (tagConflict && (!isEditing || tagConflict.id !== asset.id)) {
+      toast({
+        title: "Duplicate Tag Number",
+        description: `The tag "${values.tagNo}" is already assigned to another asset (${tagConflict.serialNumber}). Please use a unique tag.`,
+        variant: "destructive",
+      });
+      setIsSaving(false);
+      return;
+    }
+
     const assetData = {
       ...values,
       purchaseDate: format(values.purchaseDate, 'yyyy-MM-dd'),

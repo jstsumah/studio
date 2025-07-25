@@ -445,7 +445,7 @@ export function AssetTableClient({
                     Fill in the details below to add a new asset to the inventory.
                   </DialogDescription>
                 </DialogHeader>
-                <RegisterAssetForm onFinished={() => setIsRegisterOpen(false)} companies={companies} />
+                <RegisterAssetForm onFinished={() => setIsRegisterOpen(false)} companies={companies} assets={assets} />
               </DialogContent>
             </Dialog>
             <DropdownMenu>
@@ -559,7 +559,7 @@ export function AssetTableClient({
                 <DialogTitle>Edit Asset</DialogTitle>
                 <DialogDescription>Update the details for asset: {selectedAsset?.serialNumber}</DialogDescription>
             </DialogHeader>
-            <RegisterAssetForm onFinished={closeDialogs} companies={companies} asset={selectedAsset} />
+            <RegisterAssetForm onFinished={closeDialogs} companies={companies} asset={selectedAsset} assets={assets} />
         </DialogContent>
     </Dialog>
 
