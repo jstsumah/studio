@@ -156,43 +156,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => {
-    if (user) {
-        const userDocRef = doc(db, 'employees', user.id);
-        const updateData: Partial<Omit<Employee, 'id'>> = { ...data };
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to update your profile.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
-        if (newAvatarUrl) {
-            if (newAvatarUrl.startsWith('data:')) {
-                const storageRef = ref(storage, `avatars/${user.id}`);
-                try {
-                    await uploadString(storageRef, newAvatarUrl, 'data_url');
-                    const downloadURL = await getDownloadURL(storageRef);
-                    updateData.avatarUrl = downloadURL;
-                } catch (error) {
-                    console.error("Error uploading avatar:", error);
-                    toast({
-                        title: 'Avatar Upload Failed',
-                        description: 'Could not upload your new profile picture. Please try again.',
-                        variant: 'destructive',
-                    });
-                    return; 
-                }
-            } else {
-                updateData.avatarUrl = newAvatarUrl;
-            }
+    const userDocRef = doc(db, 'employees', user.id);
+    const updateData: { [key: string]: any } = { ...data };
+
+    if (newAvatarUrl) {
+      if (newAvatarUrl.startsWith('data:')) {
+        const storageRef = ref(storage, `avatars/${user.id}`);
+        try {
+          await uploadString(storageRef, newAvatarUrl, 'data_url');
+          updateData.avatarUrl = await getDownloadURL(storageRef);
+        } catch (error) {
+          console.error("Error uploading avatar:", error);
+          toast({
+            title: 'Avatar Upload Failed',
+            description: 'Could not upload your new profile picture. Please try again.',
+            variant: 'destructive',
+          });
+          return;
         }
+      } else {
+        updateData.avatarUrl = newAvatarUrl;
+      }
+    }
 
+    try {
       await updateDoc(userDocRef, updateData);
       setUser(prevUser => prevUser ? { ...prevUser, ...updateData } as Employee : null);
-       toast({
+      toast({
         title: 'Profile Updated!',
         description: 'Your information has been successfully updated.',
-    });
-    } else {
-         toast({
-            title: 'Error',
-            description: 'You must be logged in to update your profile.',
-            variant: 'destructive',
-        });
+      });
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: 'Could not update your profile. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
