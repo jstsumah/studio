@@ -81,7 +81,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
         
         <div className="flex items-center gap-4">
              <Avatar className="h-24 w-24">
-                <AvatarImage src={displayAvatarSrc || undefined} alt={user.name} />
+                <AvatarImage src={displayAvatarSrc || undefined} alt={user.name} data-ai-hint="person avatar" />
                 <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
              <div className='w-full space-y-2'>
