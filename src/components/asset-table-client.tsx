@@ -33,7 +33,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -79,6 +78,7 @@ import { useDataRefresh } from '@/hooks/use-data-refresh';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { AssignAssetForm } from './assign-asset-form';
+import { PurchaseDate } from './purchase-date';
 
 const statusConfig: Record<
   AssetStatus,
@@ -100,25 +100,6 @@ const categoryIcons: Record<AssetCategory, React.ReactNode> = {
   Tablet: <Tablet className="h-4 w-4" />,
   Other: <Circle className="h-4 w-4" />,
 };
-
-function PurchaseDate({ date }: { date: string }) {
-    const [formattedDate, setFormattedDate] = React.useState<string | null>(null);
-
-    React.useEffect(() => {
-        if (!date) {
-            setFormattedDate(null);
-            return;
-        }
-        try {
-            setFormattedDate(format(new Date(date), 'MM/dd/yyyy'));
-        } catch (e) {
-            setFormattedDate("Invalid Date");
-        }
-    }, [date]);
-
-    return <>{formattedDate}</>;
-}
-
 
 export function AssetTableClient({
   assets,
