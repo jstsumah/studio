@@ -32,9 +32,9 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import type { Employee, RecentActivity } from '@/lib/types';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Badge } from './ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const chartConfigCategory: ChartConfig = {
   value: {
