@@ -203,7 +203,7 @@ export function DashboardClient({
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => chartConfigCategory[value]?.label}
+                  tickFormatter={(value) => (chartConfigCategory[value]?.label as string) || value}
                 />
                 <XAxis dataKey="value" type="number" hide />
                 <ChartTooltip
@@ -290,3 +290,5 @@ export function DashboardClient({
     </div>
   );
 }
+
+    
