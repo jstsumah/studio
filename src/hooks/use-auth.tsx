@@ -16,7 +16,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<string | null>;
   signup: (name: string, email: string, pass: string) => Promise<string | null>;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => Promise<void>;
+  updateUser: (data: Partial<Omit<Employee, 'id'>>) => Promise<void>;
   isLoading: boolean;
   isAdmin: boolean;
 }
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signOut(auth);
   };
 
-  const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => {
+  const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
     if (!user) {
       toast({
         title: 'Error',
@@ -167,22 +167,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const userDocRef = doc(db, 'employees', user.id);
     const updateData: { [key: string]: any } = { ...data };
-
-    if (newAvatarUrl && newAvatarUrl.startsWith('data:')) {
-      const storageRef = ref(storage, `avatars/${user.id}`);
-      try {
-        await uploadString(storageRef, newAvatarUrl, 'data_url');
-        updateData.avatarUrl = await getDownloadURL(storageRef);
-      } catch (error) {
-        console.error("Error uploading avatar:", error);
-        toast({
-          title: 'Avatar Upload Failed',
-          description: 'Could not upload your new profile picture. Please try again.',
-          variant: 'destructive',
-        });
-        return;
-      }
-    }
 
     try {
       await updateDoc(userDocRef, updateData);
