@@ -1,10 +1,6 @@
 
-import { collection, doc, writeBatch } from 'firebase/firestore';
-import { db } from './firebase';
+// This file is intended for development purposes only and is not included in the production build.
+// You can use this file to seed your database with initial data.
+// To run this script, use the command: `npm run seed`
 
-async function seedDatabase() {
-  console.log('\n✅ The application is ready for live data.');
-  console.log('You can now add companies, employees, and assets directly through the UI.');
-}
-
-seedDatabase();
+console.log('Seed script is for development use. Not needed for production.');
