@@ -16,7 +16,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<string | null>;
   signup: (name: string, email: string, pass: string) => Promise<string | null>;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id'>>) => Promise<void>;
+  updateUser: (data: Partial<Omit<Employee, 'id' | 'email'>>) => Promise<void>;
   isLoading: boolean;
   isAdmin: boolean;
 }
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signOut(auth);
   };
 
-  const updateUser = async (data: Partial<Omit<Employee, 'id'>>) => {
+  const updateUser = async (data: Partial<Omit<Employee, 'id' | 'email'>>) => {
     if (!user) {
       toast({
         title: 'Error',
@@ -166,11 +166,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const userDocRef = doc(db, 'employees', user.id);
-    const updateData: { [key: string]: any } = { ...data };
-
+    
     try {
-      await updateDoc(userDocRef, updateData);
-      setUser(prevUser => prevUser ? { ...prevUser, ...updateData } as Employee : null);
+      await updateDoc(userDocRef, data);
+      setUser(prevUser => prevUser ? { ...prevUser, ...data } as Employee : null);
       toast({
         title: 'Profile Updated!',
         description: 'Your information has been successfully updated.',
