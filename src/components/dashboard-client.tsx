@@ -108,13 +108,21 @@ export function DashboardClient({
   recentActivity,
   employees
 }: {
-  stats: { total: number; value: number; inUse: number; available: number; inRepair: number };
-  chartData: { byCategory: any[]; byStatus: any[] };
+  stats: { total: number; value: number; inUse: number; available: number; inRepair: number } | null;
+  chartData: { byCategory: any[]; byStatus: any[] } | null;
   recentActivity: RecentActivity[];
   employees: Employee[];
 }) {
 
   const employeeMap = React.useMemo(() => new Map(employees.map(e => [e.id, e])), [employees]);
+
+  if (!stats || !chartData) {
+    return (
+      <div className="flex-1 space-y-4 p-4 md:p-8">
+        <p>No data to display. You may not have any assets assigned to you.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8">
@@ -282,5 +290,3 @@ export function DashboardClient({
     </div>
   );
 }
-
-    
