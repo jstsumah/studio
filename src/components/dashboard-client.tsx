@@ -259,10 +259,10 @@ export function DashboardClient({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {recentActivity.map((activity) => {
+                    {recentActivity.map((activity, index) => {
                        const employee = employeeMap.get(activity.employeeId);
                        return (
-                         <TableRow key={activity.assetId + activity.date}>
+                         <TableRow key={activity.assetId + activity.date + index}>
                             <TableCell>
                                 <div className="flex items-center gap-2">
                                     <Avatar className="hidden h-9 w-9 sm:flex">
