@@ -1,2 +1,1 @@
-// Flows will be imported for their side effects in this file.
-import './flows/generate-avatar-flow';
+// This file is intentionally left blank. It was used for local Genkit development and is not needed for production.
