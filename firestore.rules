@@ -1,28 +1,9 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only manage their own employee document
-    match /employees/{userId} {
-      allow read: if request.auth != null;
-      allow update: if request.auth.uid == userId;
-    }
-
-    // Authenticated users can read companies, assets, and activity
-    match /companies/{companyId} {
-      allow read, create, update, delete: if request.auth != null && get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'Admin';
-    }
-    match /assets/{assetId} {
-       allow read, create, update, delete: if request.auth != null;
-    }
-    match /activity/{activityId} {
-       allow read, create: if request.auth != null;
-    }
-
-    // Default deny all other access
+    // Allow read/write access to all documents for authenticated users
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null;
     }
   }
 }
