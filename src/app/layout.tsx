@@ -14,12 +14,12 @@ import { DataRefreshProvider } from '@/hooks/use-data-refresh';
 
 const fontInter = Inter({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sans',
 });
 
 const fontSpaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
-  variable: '--font-space-grotesk',
+  variable: '--font-headline',
 });
 
 
@@ -99,7 +99,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={cn(
-          'font-body antialiased',
+          'min-h-screen bg-background font-sans antialiased',
           fontInter.variable,
           fontSpaceGrotesk.variable
         )}
