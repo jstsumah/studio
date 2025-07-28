@@ -168,23 +168,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userDocRef = doc(db, 'employees', user.id);
     const updateData: { [key: string]: any } = { ...data };
 
-    if (newAvatarUrl) {
-      if (newAvatarUrl.startsWith('data:')) {
-        const storageRef = ref(storage, `avatars/${user.id}`);
-        try {
-          await uploadString(storageRef, newAvatarUrl, 'data_url');
-          updateData.avatarUrl = await getDownloadURL(storageRef);
-        } catch (error) {
-          console.error("Error uploading avatar:", error);
-          toast({
-            title: 'Avatar Upload Failed',
-            description: 'Could not upload your new profile picture. Please try again.',
-            variant: 'destructive',
-          });
-          return;
-        }
-      } else {
-        updateData.avatarUrl = newAvatarUrl;
+    if (newAvatarUrl && newAvatarUrl.startsWith('data:')) {
+      const storageRef = ref(storage, `avatars/${user.id}`);
+      try {
+        await uploadString(storageRef, newAvatarUrl, 'data_url');
+        updateData.avatarUrl = await getDownloadURL(storageRef);
+      } catch (error) {
+        console.error("Error uploading avatar:", error);
+        toast({
+          title: 'Avatar Upload Failed',
+          description: 'Could not upload your new profile picture. Please try again.',
+          variant: 'destructive',
+        });
+        return;
       }
     }
 

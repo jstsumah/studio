@@ -20,19 +20,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import type { Employee } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { LoaderCircle, Sparkles } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { clearCache } from '@/lib/data';
 import { useDataRefresh } from '@/hooks/use-data-refresh';
-import { Textarea } from './ui/textarea';
-import { generateAvatar } from '@/ai/flows/generate-avatar-flow';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   jobTitle: z.string().min(1, 'Job title is required'),
   department: z.string().min(1, 'Department is required'),
-  avatarPrompt: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
@@ -41,8 +38,6 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
   const { toast } = useToast();
   const { updateUser } = useAuth();
   const { refreshData } = useDataRefresh();
-  const [newAvatarUrl, setNewAvatarUrl] = React.useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
 
   const form = useForm<ProfileFormValues>({
@@ -51,35 +46,8 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
       name: user.name,
       jobTitle: user.jobTitle,
       department: user.department,
-      avatarPrompt: '',
     },
   });
-
-  const handleGenerateAvatar = async () => {
-    const prompt = form.getValues('avatarPrompt');
-    if (!prompt) {
-      toast({
-        title: 'Prompt is empty',
-        description: 'Please enter a description to generate an avatar.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const { avatarUrl } = await generateAvatar({ prompt });
-      setNewAvatarUrl(avatarUrl);
-    } catch (error) {
-      console.error('Avatar generation failed:', error);
-      toast({
-        title: 'Avatar Generation Failed',
-        description: 'Could not generate a new avatar. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
 
   async function onSubmit(values: ProfileFormValues) {
     setIsSaving(true);
@@ -90,7 +58,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
     };
 
     try {
-      await updateUser(updateData, newAvatarUrl);
+      await updateUser(updateData);
       clearCache();
       refreshData();
       onFinished();
@@ -105,7 +73,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
     }
   }
   
-  const displayAvatarSrc = newAvatarUrl ?? user.avatarUrl;
+  const displayAvatarSrc = user.avatarUrl;
 
   return (
     <Form {...form}>
@@ -117,23 +85,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
                 <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
              <div className='w-full space-y-2'>
-                <FormField
-                    control={form.control}
-                    name="avatarPrompt"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>AI Avatar Prompt</FormLabel>
-                        <FormControl>
-                            <Textarea placeholder="e.g., A photo of a smiling woman with brown hair in a business suit." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                 <Button type="button" onClick={handleGenerateAvatar} disabled={isGenerating || isSaving}>
-                    {isGenerating ? <LoaderCircle className="animate-spin mr-2" /> : <Sparkles className="mr-2" />}
-                    Generate New Avatar
-                </Button>
+                <p className='text-sm text-muted-foreground'>To change your avatar, please contact an administrator.</p>
              </div>
         </div>
 
@@ -193,7 +145,7 @@ export function ProfileForm({ user, onFinished, departments }: { user: Employee,
         </div>
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onFinished}>Cancel</Button>
-            <Button type="submit" disabled={isSaving || isGenerating}>
+            <Button type="submit" disabled={isSaving}>
               {isSaving && <LoaderCircle className="animate-spin mr-2" />}
               Save Changes
             </Button>
