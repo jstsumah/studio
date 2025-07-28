@@ -101,6 +101,25 @@ const categoryIcons: Record<AssetCategory, React.ReactNode> = {
   Other: <Circle className="h-4 w-4" />,
 };
 
+function PurchaseDate({ date }: { date: string }) {
+    const [formattedDate, setFormattedDate] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        if (!date) {
+            setFormattedDate(null);
+            return;
+        }
+        try {
+            setFormattedDate(format(new Date(date), 'MM/dd/yyyy'));
+        } catch (e) {
+            setFormattedDate("Invalid Date");
+        }
+    }, [date]);
+
+    return <>{formattedDate}</>;
+}
+
+
 export function AssetTableClient({
   assets,
   employees,
@@ -284,12 +303,7 @@ export function AssetTableClient({
     header: 'Purchase Date',
     cell: ({ row }) => {
       const date = row.getValue('purchaseDate') as string;
-      if (!date) return null;
-      try {
-        return format(new Date(date), 'MM/dd/yyyy');
-      } catch (e) {
-        return "Invalid Date";
-      }
+      return <PurchaseDate date={date} />;
     },
     meta: {
       className: 'hidden lg:table-cell',
