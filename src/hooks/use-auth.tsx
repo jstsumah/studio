@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateUser = async (data: Partial<Omit<Employee, 'id'>>, newAvatarUrl?: string | null) => {
     if (user) {
         const userDocRef = doc(db, 'employees', user.id);
-        const updateData = { ...data };
+        const updateData: Partial<Omit<Employee, 'id'>> = { ...data };
 
         if (newAvatarUrl) {
             if (newAvatarUrl.startsWith('data:')) {
@@ -182,7 +182,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
       await updateDoc(userDocRef, updateData);
-      setUser(prevUser => prevUser ? { ...prevUser, ...updateData } : null);
+      setUser(prevUser => prevUser ? { ...prevUser, ...updateData } as Employee : null);
        toast({
         title: 'Profile Updated!',
         description: 'Your information has been successfully updated.',
