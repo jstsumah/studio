@@ -16,7 +16,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<string | null>;
   signup: (name: string, email: string, pass: string) => Promise<string | null>;
   logout: () => void;
-  updateUser: (data: Partial<Omit<Employee, 'id' | 'email'>>) => Promise<void>;
+  updateUser: (data: Partial<Pick<Employee, 'name' | 'jobTitle' | 'department'>>) => Promise<void>;
   isLoading: boolean;
   isAdmin: boolean;
 }
@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await signOut(auth);
   };
 
-  const updateUser = async (data: Partial<Omit<Employee, 'id' | 'email'>>) => {
+  const updateUser = async (data: Partial<Pick<Employee, 'name' | 'jobTitle' | 'department'>>) => {
     if (!user) {
       toast({
         title: 'Error',
@@ -164,17 +164,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       return;
     }
-
+    
     const userDocRef = doc(db, 'employees', user.id);
     
     try {
-      await updateDoc(userDocRef, data);
-      setUser(prevUser => prevUser ? { ...prevUser, ...data } as Employee : null);
+      const updateData = { ...data };
+      await updateDoc(userDocRef, updateData);
+      setUser(prevUser => prevUser ? { ...prevUser, ...updateData } as Employee : null);
       toast({
         title: 'Profile Updated!',
         description: 'Your information has been successfully updated.',
       });
     } catch (error) {
+      console.error("Failed to update user:", error);
       toast({
         title: 'Update Failed',
         description: 'Could not update your profile. Please try again.',
