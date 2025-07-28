@@ -29,8 +29,7 @@ async function fetchCollection<T>(collectionName: string, cache: T[] | null, set
     return data;
   } catch (error) {
     console.error(`Error fetching ${collectionName}: `, error);
-    // In case of error, return empty array and don't cache
-    return [];
+    throw new Error(`Failed to fetch ${collectionName}.`);
   }
 }
 
@@ -43,12 +42,17 @@ export const getRecentActivity = async (): Promise<RecentActivity[]> => {
     if (recentActivity) {
         return recentActivity;
     }
-    const activityCollection = collection(db, 'activity');
-    const q = query(activityCollection, orderBy('date', 'desc'), limit(5));
-    const snapshot = await getDocs(q);
-    const activities = snapshot.docs.map(doc => doc.data() as RecentActivity);
-    recentActivity = activities;
-    return activities;
+    try {
+        const activityCollection = collection(db, 'activity');
+        const q = query(activityCollection, orderBy('date', 'desc'), limit(5));
+        const snapshot = await getDocs(q);
+        const activities = snapshot.docs.map(doc => doc.data() as RecentActivity);
+        recentActivity = activities;
+        return activities;
+    } catch (error) {
+        console.error("Error fetching recent activity:", error);
+        return [];
+    }
 };
 
 export const getCompanyById = async (id: string): Promise<Company | undefined> => {
