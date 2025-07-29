@@ -523,7 +523,8 @@ const sidebarMenuButtonVariants = cva(
           "hover:bg-destructive/10 text-destructive-foreground hover:text-destructive",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
-        secondary: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         link: "h-auto p-0 text-sidebar-foreground/70 underline-offset-4 hover:underline hover:text-sidebar-foreground",
       },
