@@ -1,6 +1,6 @@
 
 import type { Asset, Company, Employee, RecentActivity } from './types';
-import { collection, doc, getDocs, updateDoc, addDoc, setDoc, deleteDoc, query, orderBy, limit, where, getDoc } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, addDoc, setDoc, deleteDoc, query, orderBy, limit, where } from "firebase/firestore";
 import { db } from './firebase';
 
 // Caching layer to prevent re-fetching data on every navigation
@@ -102,8 +102,8 @@ export const addAsset = async (data: Omit<Asset, 'id' | 'history' | 'status' | '
 
 export const updateAsset = async (assetId: string, data: Partial<Omit<Asset, 'id'>>) => {
     const assetDocRef = doc(db, 'assets', assetId);
-    const originalAssetSnap = await getDoc(assetDocRef);
-    const originalAsset = originalAssetSnap.data() as Asset;
+    const originalAssetSnap = await getDocs(query(collection(db, 'assets'), where('__name__', '==', assetId)));
+    const originalAsset = originalAssetSnap.docs[0]?.data() as Asset;
     
     await updateDoc(assetDocRef, data);
 
